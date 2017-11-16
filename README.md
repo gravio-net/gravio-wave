@@ -1,2 +1,2 @@
-# gravio-app
-GRAVIO Ecosystem mobile application
+# gravio-wave
+GRAVIO Ecosystem WAVE platform
