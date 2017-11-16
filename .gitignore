@@ -1,0 +1,6 @@
+*.tar.gz
+*.exe
+*.user
+
+build/*
+
