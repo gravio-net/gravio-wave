@@ -12,7 +12,7 @@ using namespace gravio::wave;
 QString ApplicationPath::ApplicationUrlPath()
 {
 #ifdef Q_OS_ANDROID
-    return QString("android_asset");
+    return QString("assets:");
 #endif
 
     return qApp->applicationDirPath();
