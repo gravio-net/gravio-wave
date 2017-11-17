@@ -44,3 +44,7 @@ HEADERS += \
 
 RESOURCES += \
     qtquickcontrols2.conf
+
+dep_root.files += android/*
+dep_root.path = /assets/gravio
+INSTALLS += dep_root
