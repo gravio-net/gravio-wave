@@ -12,6 +12,7 @@ int Application::Load()
     appConfig_.LoadFromFile(lAppConfig.toStdString());
 
     profile_ = QString::fromWCharArray(appConfig_.operator [](L"profile").GetString().c_str());
+    style_ = QString::fromWCharArray(appConfig_.operator [](L"style").GetString().c_str());
 
     QString lModulesConfig = qApp->applicationDirPath() + "/" + profile_ + "/modules/modules.config";
     qInfo() << "Loading modules-config:" << lModulesConfig;
@@ -58,7 +59,7 @@ int Application::Execute()
         QQuickStyle::setStyle(lSettings.value("style").toString());
     */
 
-    QQuickStyle::setStyle("Material"); // default style
+    QQuickStyle::setStyle(style_); // default style
 
     engine_.rootContext()->setContextProperty("gravioApp", this);
     engine_.rootContext()->setContextProperty("modulesModel", &modules_);

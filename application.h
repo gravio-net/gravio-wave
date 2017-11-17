@@ -91,6 +91,7 @@ private:
     QQmlApplicationEngine engine_;
 
     QString profile_;
+    QString style_;
     json::Document modulesConfig_;
     json::Document appConfig_;
 

@@ -1,8 +1,6 @@
 import QtQuick 2.6
 import QtQuick.Controls 2.0
 
-import net.gravio.wave.modules.contacts 1.0
-
 Page
 {
     id: page
@@ -20,10 +18,20 @@ Page
             id: pane
             width: parent.width
 
+            TextField
+            {
+                id: searchField
+                placeholderText: "Enter search text"
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.fill: parent
+            }
+
+            /*
             Text
             {
                 text: contactsModel.title
             }
+            */
         }
 
         ScrollIndicator.vertical: ScrollIndicator { }
