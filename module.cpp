@@ -9,6 +9,15 @@
 
 using namespace gravio::wave;
 
+QString ApplicationPath::ApplicationDirPath()
+{
+#if defined (ANDROIDQUIRKS)
+    return QString("android_asset");
+#endif
+
+    return qApp->applicationDirPath();
+}
+
 //
 // ModuleWrapper
 //
@@ -73,7 +82,7 @@ int ModuleWrapper::Load()
 
 QString ModuleWrapper::ModulePath() const
 {
-    QString lPath = qApp->applicationDirPath() + "/" + Profile() + "/modules/" + Name() + "/";
+    QString lPath = ApplicationPath::ApplicationDirPath() + "/" + Profile() + "/modules/" + Name() + "/";
     return lPath;
 }
 
@@ -111,10 +120,10 @@ int ModuleInstance::Load(const QString& profile, const QString& name, QQmlApplic
 {
     if (loaded_) return 1;
 
-    QDir lModulesDir(qApp->applicationDirPath());   // "./"
-    lModulesDir.cd(profile);                        // "./roaming"
-    lModulesDir.cd("modules");                      // "./roaming/modules"
-    lModulesDir.cd(name);                           // "./roaming/modules/contacts"
+    QDir lModulesDir(ApplicationPath::ApplicationDirPath());    // "./"
+    lModulesDir.cd(profile);                                    // "./roaming"
+    lModulesDir.cd("modules");                                  // "./roaming/modules"
+    lModulesDir.cd(name);                                       // "./roaming/modules/contacts"
 
     bool lFound = false;
     foreach (QString lFileName, lModulesDir.entryList(QDir::Files))

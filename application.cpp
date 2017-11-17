@@ -8,7 +8,7 @@ using namespace gravio::wave;
 
 int Application::Load()
 {
-    QString lAppConfig = qApp->applicationDirPath() + "/" + APP_NAME + ".config";
+    QString lAppConfig = ApplicationPath::ApplicationDirPath() + "/" + APP_NAME + ".config";
     qInfo() << "(=================)";
     qInfo() << "Loading app-config:" << lAppConfig;
     if (QFile::exists(lAppConfig)) appConfig_.LoadFromFile(lAppConfig.toStdString());
@@ -21,7 +21,7 @@ int Application::Load()
     profile_ = QString::fromWCharArray(appConfig_.operator [](L"profile").GetString().c_str());
     style_ = QString::fromWCharArray(appConfig_.operator [](L"style").GetString().c_str());
 
-    QString lModulesConfig = qApp->applicationDirPath() + "/" + profile_ + "/modules/modules.config";
+    QString lModulesConfig = ApplicationPath::ApplicationDirPath() + "/" + profile_ + "/modules/modules.config";
     qInfo() << "Loading modules-config:" << lModulesConfig;
     modulesConfig_.LoadFromFile(lModulesConfig.toStdString());
 
@@ -57,22 +57,13 @@ int Application::Load()
 
 int Application::Execute()
 {
-    /*
-    QSettings lSettings;
-    QString lStyle = QQuickStyle::name();
-    if (!lStyle.isEmpty())
-        lSettings.setValue("style", lStyle);
-    else
-        QQuickStyle::setStyle(lSettings.value("style").toString());
-    */
-
     QQuickStyle::setStyle(style_); // default style
 
     engine_.rootContext()->setContextProperty("gravioApp", this);
     engine_.rootContext()->setContextProperty("modulesModel", &modules_);
     engine_.rootContext()->setContextProperty("availableStyles", QQuickStyle::availableStyles());
 
-    engine_.load(qApp->applicationDirPath() + "/" + profile_ + "/" + APP_NAME + ".qml");
+    engine_.load(ApplicationPath::ApplicationDirPath() + "/" + profile_ + "/" + APP_NAME + ".qml");
     if (engine_.rootObjects().isEmpty())
     {
         qCritical() << "Root object is empty. Exiting...";

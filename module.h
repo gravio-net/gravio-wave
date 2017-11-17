@@ -18,6 +18,16 @@ namespace gravio {
 namespace wave {
 
 /**
+ * @brief The ApplicationPath class
+ * AppDir for the various platforms
+ */
+class ApplicationPath
+{
+public:
+    static QString ApplicationDirPath();
+};
+
+/**
  * @brief The ModuleInstance class
  * Wrapper for the really loaded modle
  */
