@@ -33,7 +33,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 DISTFILES += \
     qml/gravio-app.qml \
     gravio-app.config \
-    qtquickcontrols2.conf
+    qtquickcontrols2.conf \
+    modules/modules.config
 
 HEADERS += \
     logger.h \

@@ -214,6 +214,7 @@ ApplicationWindow
             focus: true
             currentIndex: -1
             anchors.fill: parent
+            anchors.margins: 10
 
             delegate: ItemDelegate
             {
@@ -249,6 +250,7 @@ ApplicationWindow
     {
         id: stackView
         anchors.fill: parent
+        anchors.margins: 10
 
         property var list: []
 
@@ -375,7 +377,7 @@ ApplicationWindow
                             id: icon
                             width: 64
                             height: 64
-                            x: rect.width/2.0 - icon.width/2.0
+                            x: rect.width/2.0 - icon.width/2.0 - 5.0
                             fillMode: Image.PreserveAspectFit
                             source: iconFile
                         }
