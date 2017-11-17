@@ -11,7 +11,7 @@ using namespace gravio::wave;
 
 QString ApplicationPath::ApplicationDirPath()
 {
-#if defined (ANDROIDQUIRKS)
+#ifdef Q_OS_ANDROID
     return QString("android_asset");
 #endif
 
