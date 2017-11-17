@@ -11,6 +11,7 @@ int Application::Load()
     QString lAppConfig = ApplicationPath::ApplicationDirPath() + "/" + APP_NAME + ".config";
     qInfo() << "(=================)";
     qInfo() << "Loading app-config:" << lAppConfig;
+
     if (QFile::exists(lAppConfig)) appConfig_.LoadFromFile(lAppConfig.toStdString());
     else
     {
@@ -23,7 +24,13 @@ int Application::Load()
 
     QString lModulesConfig = ApplicationPath::ApplicationDirPath() + "/" + profile_ + "/modules/modules.config";
     qInfo() << "Loading modules-config:" << lModulesConfig;
-    modulesConfig_.LoadFromFile(lModulesConfig.toStdString());
+
+    if (QFile::exists(lModulesConfig)) modulesConfig_.LoadFromFile(lModulesConfig.toStdString());
+    else
+    {
+        qCritical() << "File is missing" << lModulesConfig << "Aborting...";
+        return -3;
+    }
 
     json::Value lModules = modulesConfig_[L"modules"];
     if (lModules.IsArray())
