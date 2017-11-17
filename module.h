@@ -27,7 +27,7 @@ public:
     ModuleInstance() : name_("default"), loaded_(false) {}
 
     bool IsLoaded() const { return loaded_; }
-    int Load(const QString& profile, const QString& name, QQmlApplicationEngine& engine);
+    int Load(const QString& profile, const QString& name, QQmlApplicationEngine* engine);
 
 private:
     QString name_;
@@ -41,7 +41,7 @@ private:
 class ModuleWrapper
 {
 public:
-    ModuleWrapper(json::Value& config): config_(config) {}
+    ModuleWrapper(json::Value& config, QQmlApplicationEngine* engine): config_(config), engine_(engine) {}
 
     QString Name() const;
     QString Caption() const;
@@ -57,13 +57,14 @@ public:
     QString IconTitleFilePath() const;
     QString SourcePath() const;
 
-    Q_INVOKABLE int Load(QQmlApplicationEngine& engine);
+    int Load();
 
     ModuleInstance& Instance();
 
 private:
     json::Value config_;
     ModuleInstance instance_;
+    QQmlApplicationEngine* engine_;
 };
 
 
@@ -86,7 +87,8 @@ public:
         LoadedRole,
         CaptionOffsetRole,
         SourceRole,
-        IconTitleRole
+        IconTitleRole,
+        ModulePathRole
     };
 
     ModulesModel(QObject *parent = 0);
@@ -96,8 +98,9 @@ public:
     QHash<int, QByteArray> roleNames() const;
 
     Q_INVOKABLE QVariantMap get(int index);
+    Q_INVOKABLE void load(int index);
 
-    void AddModule(ModuleWrapper&);
+    const ModuleWrapper& AddModule(const ModuleWrapper&);
 
 private:
     QList<ModuleWrapper> modules_;

@@ -28,4 +28,36 @@ Page
 
         ScrollIndicator.vertical: ScrollIndicator { }
     }
+
+    //
+    // common module methods
+    //
+    function moduleDeactivate()
+    {
+        console.log("[Contacts/moduleDeactivate]: fired");
+        toolBar.actionActivated.disconnect(addContact);
+    }
+
+    function moduleActivate(moduleInfo)
+    {
+        console.log("[Contacts/moduleActivate]: fired");
+
+        moduleName = moduleInfo.name;
+
+        toolBar.actionActivated.connect(addContact);
+        toolBar.setActionImage("file:///" + moduleInfo.modulePath + "/add.png");
+    }
+
+    //
+    // common module properties
+    //
+    property string moduleName;
+
+    //
+    // private methods
+    //
+    function addContact()
+    {
+        console.log("[Contacts/addContact]: fired");
+    }
 }

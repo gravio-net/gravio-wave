@@ -27,11 +27,15 @@
  *  |-logs\
  *  |-local\
  *  | |-modules\
+ *  | | |--contacts\
+ *  | | |...
  *  | | |--modules.config
  *  | |-gravio-app.qml
  *  |-roaming\
  *  | |-modules\
- *  | |  |--modules.config
+ *  | | |--contacts\
+ *  | | |...
+ *  | | |--modules.config
  *  | |-gravio-app.qml
  *  |-gravio-app.config
  *

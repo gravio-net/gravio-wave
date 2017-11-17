@@ -26,15 +26,7 @@ ApplicationWindow
 
         onActivated:
         {
-            if (stackView.depth > 1)
-            {
-                stackView.popItem();
-                listView.currentIndex = stackView.getIndex();
-            }
-
-            footerBar.visible = stackView.depth > 1;
-            footerBar.adjust();
-            toolBar.adjust();
+            stackView.deactivateModule();
         }
     }
 
@@ -69,15 +61,7 @@ ApplicationWindow
 
                 onClicked:
                 {
-                    if (stackView.depth > 1)
-                    {
-                        stackView.popItem();
-                        listView.currentIndex = stackView.getIndex();
-                    }
-
-                    footerBar.visible = stackView.depth > 1;
-                    footerBar.adjust();
-                    toolBar.adjust();
+                    stackView.deactivateModule();
                 }
 
                 Image
@@ -203,15 +187,16 @@ ApplicationWindow
 
         signal actionActivated();
 
+        function adjust()
+        {
+            actionTopButton.visible = !(stackView.depth > 1);
+            actionTopImage.source = "images/black/configure.png";
+        }
+
         function setActionImage(imageSource)
         {
             actionTopImage.source = imageSource;
             actionTopButton.visible = true;
-        }
-
-        function adjust()
-        {
-            actionTopButton.visible = !(stackView.depth > 1);
         }
     }
 
@@ -250,12 +235,7 @@ ApplicationWindow
 
                 onClicked:
                 {
-                    listView.currentIndex = index;
-                    stackView.pushItem(index, source);
-                    footerBar.visible = true;
-                    footerBar.adjust();
-                    toolBar.adjust();
-                    drawer.close();
+                    stackView.activateModule(index, name, source);
                 }
             }
 
@@ -272,21 +252,40 @@ ApplicationWindow
 
         property var list: []
 
-        function pushItem(index, item)
+        function pushItem(moduleIndex, name, module)
         {
-            list.push(index);
-            push(item);
+            console.log("[StackView/pushItem]: depth(0) = " + stackView.depth);
+
+            var lModule = this.find
+            (
+                function(item, index)
+                {
+                    return item.moduleName == name;
+                },
+                StackView.ForceLoad
+            );
+
+            console.log("[StackView/pushItem]: depth(1) = " + stackView.depth + ", module = " + lModule);
+
+            if (lModule == null)
+            {
+                lModule = push(module);
+                list.push(moduleIndex);
+            }
+
+            console.log("[StackView/pushItem]: depth(2) = " + stackView.depth + ", module = " + lModule);
+            return lModule;
         }
 
         function getPrevIndex()
         {
-            if (list.length > 1) { console.info(list[list.length-2]); return list[list.length-2]; }
+            if (list.length > 1) { return list[list.length-2]; }
             return -1;
         }
 
         function getIndex()
         {
-            if (list.length > 0) { console.info(list[list.length-1]); return list[list.length-1]; }
+            if (list.length > 0) { return list[list.length-1]; }
             return -1;
         }
 
@@ -296,9 +295,54 @@ ApplicationWindow
             pop();
         }
 
+        function activateModule(index, name, source)
+        {
+            var lModule = null;
+
+            // deactivate current module - unsubscribe from toolbar actions & etc.
+            stackView.currentItem.moduleDeactivate();
+
+            // move to the new index
+            listView.currentIndex = index;
+            // try to load module (if already loaded - checked inside)
+            modulesModel.load(index);
+            // push new module
+            lModule = stackView.pushItem(index, name, source); // push to start *.qml
+
+            // reset tool&footer bars
+            footerBar.visible = true;
+            footerBar.adjust();
+            toolBar.adjust();
+            drawer.close();
+
+            // activate new current module
+            lModule.moduleActivate(modulesModel.get(stackView.getIndex()));
+        }
+
+        function deactivateModule()
+        {
+            if (stackView.depth > 1)
+            {
+                // _MUST_ be implemented in <module>.qml
+                stackView.currentItem.moduleDeactivate();
+
+                stackView.popItem();
+                listView.currentIndex = stackView.getIndex();
+            }
+
+            footerBar.visible = stackView.depth > 1;
+            footerBar.adjust();
+            toolBar.adjust();
+
+            console.log("[StackView/popItem]: depth = " + stackView.depth + ", module = " + stackView.currentItem);
+
+            // re-activate new current module
+            stackView.currentItem.moduleActivate(modulesModel.get(stackView.getIndex()));
+        }
+
         initialItem: GridLayout
         {
-            id: grid
+            id: gridView
             columns: 3
 
             Repeater
@@ -338,12 +382,27 @@ ApplicationWindow
 
                         onClicked:
                         {
-                            aboutDialog.title = index.toString()
-                            aboutDialog.open()
+                            stackView.activateModule(index, name, source);
                         }
                     }
                 }
             }
+
+            //
+            // common module methods
+            //
+            function moduleDeactivate()
+            {
+            }
+
+            function moduleActivate(moduleInfo)
+            {
+            }
+
+            //
+            // common module properties
+            //
+            property string moduleName;
         }
     }
 

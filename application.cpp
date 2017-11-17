@@ -1,5 +1,6 @@
 
 #include "application.h"
+#include "exception.h"
 
 using namespace gravio::wave;
 
@@ -21,13 +22,19 @@ int Application::Load()
     {
         for(int lIdx = 0; lIdx < lModules.Size(); lIdx++)
         {
-            json::Value lModule = lModules[lIdx];
-            ModuleWrapper lWrapper(lModule);
-            modules_.AddModule(lWrapper);
-
-            if (lWrapper.Autoload() && !lWrapper.IsLoaded())
+            try
             {
-                lWrapper.Load(engine_);
+                json::Value lModule = lModules[lIdx];
+                const ModuleWrapper& lWrapper = modules_.AddModule(ModuleWrapper(lModule, &engine_));
+
+                if (lWrapper.Autoload() && !lWrapper.IsLoaded())
+                {
+                    const_cast<ModuleWrapper&>(lWrapper).Load();
+                }
+            }
+            catch(ModuleAlreadyExistsException&)
+            {
+                // already logged
             }
         }
     }

@@ -9,7 +9,7 @@ SOURCES += main.cpp \
     module.cpp
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
-QML_IMPORT_PATH = C:\Projects\gravio-wave\build\debug
+QML_IMPORT_PATH =
 
 # Additional import path used to resolve QML modules just for Qt Quick Designer
 QML_DESIGNER_IMPORT_PATH =
@@ -37,4 +37,5 @@ HEADERS += \
     logger.h \
     application.h \
     module.h \
-    json.h
+    json.h \
+    exception.h

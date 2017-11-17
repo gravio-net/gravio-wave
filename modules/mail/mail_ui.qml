@@ -21,4 +21,24 @@ Page
 
         ScrollIndicator.vertical: ScrollIndicator { }
     }
+
+    //
+    // common module methods
+    //
+    function moduleDeactivate()
+    {
+        console.log("[Mail/moduleDeactivate]: fired");
+    }
+
+    function moduleActivate(moduleInfo)
+    {
+        console.log("[Mail/moduleActivate]: fired");
+
+        moduleName = moduleInfo.name;
+    }
+
+    //
+    // common module properties
+    //
+    property string moduleName;
 }

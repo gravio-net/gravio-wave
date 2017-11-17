@@ -2,8 +2,10 @@
 #include <QPluginLoader>
 #include <QQmlExtensionPlugin>
 #include <QDebug>
+#include <QException>
 
 #include "module.h"
+#include "exception.h"
 
 using namespace gravio::wave;
 
@@ -64,9 +66,9 @@ bool ModuleWrapper::IsLoaded() const
     return instance_.IsLoaded();
 }
 
-int ModuleWrapper::Load(QQmlApplicationEngine& engine)
+int ModuleWrapper::Load()
 {
-    return instance_.Load(Profile(), Name(), engine);
+    return instance_.Load(Profile(), Name(), engine_);
 }
 
 QString ModuleWrapper::ModulePath() const
@@ -78,21 +80,21 @@ QString ModuleWrapper::ModulePath() const
 QString ModuleWrapper::IconFilePath() const
 {
     QString lFileName = "file:///" + ModulePath() + IconFile();
-    qInfo() << "Loading image" << lFileName;
+    qDebug() << "Loading image" << lFileName;
     return lFileName;
 }
 
 QString ModuleWrapper::IconTitleFilePath() const
 {
     QString lFileName = "file:///" + ModulePath() + IconTitleFile();
-    qInfo() << "Loading image" << lFileName;
+    qDebug() << "Loading image" << lFileName;
     return lFileName;
 }
 
 QString ModuleWrapper::SourcePath() const
 {
     QString lFileName = "file:///" + ModulePath() + Source();
-    qInfo() << "Returning source" << lFileName;
+    qDebug() << "Returning source" << lFileName;
     return lFileName;
 }
 
@@ -105,8 +107,10 @@ ModuleInstance& ModuleWrapper::Instance()
 // ModuleInstance
 //
 
-int ModuleInstance::Load(const QString& profile, const QString& name, QQmlApplicationEngine& engine)
+int ModuleInstance::Load(const QString& profile, const QString& name, QQmlApplicationEngine* engine)
 {
+    if (loaded_) return 1;
+
     QDir lModulesDir(qApp->applicationDirPath());   // "./"
     lModulesDir.cd(profile);                        // "./roaming"
     lModulesDir.cd("modules");                      // "./roaming/modules"
@@ -119,11 +123,13 @@ int ModuleInstance::Load(const QString& profile, const QString& name, QQmlApplic
         QObject *lModule = lLoader.instance();
         if (lModule)
         {
-            ((QQmlExtensionPlugin*)lModule)->initializeEngine(&engine, ""); // preload module instance
+            ((QQmlExtensionPlugin*)lModule)->initializeEngine(engine, ""); // preload module instance
             ((QQmlExtensionPlugin*)lModule)->registerTypes(""); // register module classes
             lFound = true;
         }
     }
+
+    if (lFound) loaded_ = true;
 
     return lFound ? 1 : 0;
 }
@@ -173,6 +179,8 @@ QVariant ModulesModel::data(const QModelIndex &index, int role) const
         return modules_.at(index.row()).SourcePath();
     case IconTitleRole:
         return modules_.at(index.row()).IconTitleFilePath();
+    case ModulePathRole:
+        return modules_.at(index.row()).ModulePath();
     default:
         return QVariant();
     }
@@ -190,6 +198,7 @@ QHash<int, QByteArray> ModulesModel::roleNames() const
     lRoles[CaptionOffsetRole] = "captionOffset";
     lRoles[SourceRole] = "source";
     lRoles[IconTitleRole] = "iconTitleFile";
+    lRoles[ModulePathRole] = "modulePath";
 
     return lRoles;
 }
@@ -215,16 +224,28 @@ QVariantMap ModulesModel::get(int row)
     return QVariantMap();
 }
 
-void ModulesModel::AddModule(ModuleWrapper& module)
+void ModulesModel::load(int index)
+{
+    if (index < modules_.size())
+    {
+        const_cast<ModuleWrapper&>(modules_.at(index)).Load();
+    }
+}
+
+const ModuleWrapper& ModulesModel::AddModule(const ModuleWrapper& module)
 {
     if (index_.find(module.Name().toStdString()) == index_.end())
     {
         modules_.append(module);
         index_.insert(module.Name().toStdString());
+
+        return modules_.at(modules_.length()-1); // return last one
     }
     else
     {
         qWarning() << "Module" << module.Name() << "already exists. Skipping...";
     }
+
+    throw ModuleAlreadyExistsException();
 }
 
