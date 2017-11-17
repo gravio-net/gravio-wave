@@ -27,6 +27,15 @@ QString ApplicationPath::ApplicationDirPath()
     return qApp->applicationDirPath();
 }
 
+QString ApplicationPath::AssetUrlPath()
+{
+#ifdef Q_OS_ANDROID
+    return QString("file:");
+#endif
+
+    return QString("file:///");
+}
+
 //
 // ModuleWrapper
 //
@@ -97,21 +106,21 @@ QString ModuleWrapper::ModulePath() const
 
 QString ModuleWrapper::IconFilePath() const
 {
-    QString lFileName = "file:///" + ModulePath() + IconFile();
+    QString lFileName = ApplicationPath::AssetUrlPath() + ModulePath() + IconFile();
     qDebug() << "Loading image" << lFileName;
     return lFileName;
 }
 
 QString ModuleWrapper::IconTitleFilePath() const
 {
-    QString lFileName = "file:///" + ModulePath() + IconTitleFile();
+    QString lFileName = ApplicationPath::AssetUrlPath() + ModulePath() + IconTitleFile();
     qDebug() << "Loading image" << lFileName;
     return lFileName;
 }
 
 QString ModuleWrapper::SourcePath() const
 {
-    QString lFileName = "file:///" + ModulePath() + Source();
+    QString lFileName = ApplicationPath::AssetUrlPath() + ModulePath() + Source();
     qDebug() << "Returning source" << lFileName;
     return lFileName;
 }
