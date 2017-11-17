@@ -1,4 +1,6 @@
 
+#include <QFile>
+
 #include "application.h"
 #include "exception.h"
 
@@ -9,7 +11,12 @@ int Application::Load()
     QString lAppConfig = qApp->applicationDirPath() + "/" + APP_NAME + ".config";
     qInfo() << "(=================)";
     qInfo() << "Loading app-config:" << lAppConfig;
-    appConfig_.LoadFromFile(lAppConfig.toStdString());
+    if (QFile::exists(lAppConfig)) appConfig_.LoadFromFile(lAppConfig.toStdString());
+    else
+    {
+        qCritical() << "File is missing" << lAppConfig << "Aborting...";
+        return -2;
+    }
 
     profile_ = QString::fromWCharArray(appConfig_.operator [](L"profile").GetString().c_str());
     style_ = QString::fromWCharArray(appConfig_.operator [](L"style").GetString().c_str());
