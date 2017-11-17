@@ -12,7 +12,7 @@ int Application::Load()
     qInfo() << "(=================)";
     qInfo() << "Loading app-config:" << lAppConfig;
 
-    if (QFile::exists(lAppConfig)) appConfig_.LoadFromFile(lAppConfig.toStdString());
+    if (QFile(lAppConfig).exists()) appConfig_.LoadFromFile(lAppConfig.toStdString());
     else
     {
         qCritical() << "File is missing" << lAppConfig << "Aborting...";
@@ -25,7 +25,7 @@ int Application::Load()
     QString lModulesConfig = ApplicationPath::ApplicationDirPath() + "/" + profile_ + "/modules/modules.config";
     qInfo() << "Loading modules-config:" << lModulesConfig;
 
-    if (QFile::exists(lModulesConfig)) modulesConfig_.LoadFromFile(lModulesConfig.toStdString());
+    if (QFile(lModulesConfig).exists()) modulesConfig_.LoadFromFile(lModulesConfig.toStdString());
     else
     {
         qCritical() << "File is missing" << lModulesConfig << "Aborting...";

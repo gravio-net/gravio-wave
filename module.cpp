@@ -91,7 +91,7 @@ int ModuleWrapper::Load()
 
 QString ModuleWrapper::ModulePath() const
 {
-    QString lPath = ApplicationPath::ApplicationDirPath() + "/" + Profile() + "/modules/" + Name() + "/";
+    QString lPath = ApplicationPath::ApplicationUrlPath() + "/" + Profile() + "/modules/" + Name() + "/";
     return lPath;
 }
 
