@@ -26,6 +26,7 @@ class ApplicationPath
 public:
     static QString ApplicationDirPath();
     static QString ApplicationUrlPath();
+    static QString AssetUrlPath();
 };
 
 /**
