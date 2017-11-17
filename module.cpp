@@ -21,7 +21,7 @@ QString ApplicationPath::ApplicationUrlPath()
 QString ApplicationPath::ApplicationDirPath()
 {
 #ifdef Q_OS_ANDROID
-    return QString("assets:/");
+    return QString("assets:");
 #endif
 
     return qApp->applicationDirPath();
