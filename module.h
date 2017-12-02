@@ -9,6 +9,7 @@
 #include <QModelIndex>
 #include <QHash>
 #include <QVariant>
+#include <QStandardPaths>
 
 #include <set>
 
@@ -24,9 +25,32 @@ namespace wave {
 class ApplicationPath
 {
 public:
-    static QString ApplicationDirPath();
-    static QString ApplicationUrlPath();
-    static QString AssetUrlPath();
+    static QString applicationDirPath();
+    static QString applicationUrlPath()
+    {
+    #ifdef Q_OS_ANDROID
+        return QString("assets:");
+    #endif
+
+        return qApp->applicationDirPath();
+    }
+    static  QString assetUrlPath()
+    {
+    #ifdef Q_OS_ANDROID
+        return QString("file:");
+    #endif
+
+        return QString("file:///");
+    }
+    static QString dataDirPath()
+    {
+    #ifdef Q_OS_ANDROID
+        return QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+    #endif
+
+        return qApp->applicationDirPath() + "/data";
+    }
+    static QString logsDirPath();
 };
 
 /**
@@ -38,8 +62,12 @@ class ModuleInstance
 public:
     ModuleInstance() : name_("default"), loaded_(false) {}
 
-    bool IsLoaded() const { return loaded_; }
-    int Load(const QString& profile, const QString& name, QQmlApplicationEngine* engine);
+    bool isLoaded() const { return loaded_; }
+    int load(const QString& profile, const QString& name, QQmlApplicationEngine* engine);
+
+private:
+    QString prepareBin(const QString&);
+    bool isExecutable(QString&);
 
 private:
     QString name_;
@@ -55,23 +83,27 @@ class ModuleWrapper
 public:
     ModuleWrapper(json::Value& config, QQmlApplicationEngine* engine): config_(config), engine_(engine) {}
 
-    QString Name() const;
-    QString Caption() const;
-    QString IconFile() const;
-    QString IconTitleFile() const;
-    QString Profile() const;
-    QString Source() const;
-    int CaptionOffset() const;
-    bool Autoload() const;
-    bool IsLoaded() const;
-    QString ModulePath() const;
-    QString IconFilePath() const;
-    QString IconTitleFilePath() const;
-    QString SourcePath() const;
+    QString name() const;
+    QString caption() const;
+    QString iconFile() const;
+    QString iconTitleFile() const;
+    QString profile() const;
+    QString source() const;
+    int captionOffset() const;
+    int iconLeftPadding() const;
+    int iconTitleTopPadding() const;
+    bool autoload() const;
+    bool isLoaded() const;
+    QString modulePath() const;
+    QString assetPrefix() const;
+    QString iconFilePath() const;
+    QString iconTitleFilePath() const;
+    QString sourcePath() const;
+    QString moduleDataPath() const;
 
-    int Load();
+    int load();
 
-    ModuleInstance& Instance();
+    ModuleInstance& instance();
 
 private:
     json::Value config_;
@@ -84,7 +116,7 @@ private:
  * @brief The ModulesModel class
  * List source for the pane
  */
-class ModulesModel : public QAbstractListModel
+class ModulesModel: public QAbstractListModel
 {
     Q_OBJECT
 
@@ -100,7 +132,11 @@ public:
         CaptionOffsetRole,
         SourceRole,
         IconTitleRole,
-        ModulePathRole
+        ModulePathRole,
+        IconLeftPaddingRole,
+        IconTitleTopPaddingRole,
+        AssetPrefixRole,
+        ModuleDataPathRole
     };
 
     ModulesModel(QObject *parent = 0);
@@ -112,7 +148,7 @@ public:
     Q_INVOKABLE QVariantMap get(int index);
     Q_INVOKABLE void load(int index);
 
-    const ModuleWrapper& AddModule(const ModuleWrapper&);
+    const ModuleWrapper& addModule(const ModuleWrapper&);
 
 private:
     QList<ModuleWrapper> modules_;

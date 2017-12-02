@@ -14,5 +14,5 @@ public:
     void initializeEngine(QQmlEngine *engine, const char *uri) override;
 
 private:
-    ContactsViewModel contacts_;
+    gravio::wave::Contacts contacts_;
 };

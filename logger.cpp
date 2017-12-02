@@ -14,52 +14,52 @@ Logger::Logger(QString path, QString pattern): path_(path), pattern_(pattern)
     qInstallMessageHandler(gravio::wave::LoggerMessageHandler);
 }
 
-void Logger::LogInfo(const QString& msg)
+void Logger::logInfo(const QString& msg)
 {
     static const QString lCommon("common");
-    LogInfo(lCommon, msg);
+    logInfo(lCommon, msg);
 }
-void Logger::LogInfo(const QString& category, const QString& msg)
+void Logger::logInfo(const QString& category, const QString& msg)
 {
     Log(QtMsgType::QtInfoMsg, category, msg);
 }
 
-void Logger::LogWarn(const QString& msg)
+void Logger::logWarn(const QString& msg)
 {
     static const QString lCommon("common");
-    LogInfo(lCommon, msg);
+    logInfo(lCommon, msg);
 }
-void Logger::LogWarn(const QString& category, const QString& msg)
+void Logger::logWarn(const QString& category, const QString& msg)
 {
     Log(QtMsgType::QtWarningMsg, category, msg);
 }
 
-void Logger::LogDebug(const QString& msg)
+void Logger::logDebug(const QString& msg)
 {
     static const QString lCommon("common");
-    LogInfo(lCommon, msg);
+    logInfo(lCommon, msg);
 }
-void Logger::LogDebug(const QString& category, const QString& msg)
+void Logger::logDebug(const QString& category, const QString& msg)
 {
     Log(QtMsgType::QtDebugMsg, category, msg);
 }
 
-void Logger::LogCritical(const QString& msg)
+void Logger::logCritical(const QString& msg)
 {
     static const QString lCommon("common");
-    LogInfo(lCommon, msg);
+    logInfo(lCommon, msg);
 }
-void Logger::LogCritical(const QString& category, const QString& msg)
+void Logger::logCritical(const QString& category, const QString& msg)
 {
     Log(QtMsgType::QtCriticalMsg, category, msg);
 }
 
-void Logger::LogFatal(const QString& msg)
+void Logger::logFatal(const QString& msg)
 {
     static const QString lCommon("common");
-    LogInfo(lCommon, msg);
+    logInfo(lCommon, msg);
 }
-void Logger::LogFatal(const QString& category, const QString& msg)
+void Logger::logFatal(const QString& category, const QString& msg)
 {
     Log(QtMsgType::QtFatalMsg, category, msg);
 }

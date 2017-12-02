@@ -34,14 +34,16 @@ DISTFILES += \
     qml/gravio-app.qml \
     gravio-app.config \
     qtquickcontrols2.conf \
-    modules/modules.config
+    modules/modules.config \
+    android/AndroidManifest.xml
 
 HEADERS += \
     logger.h \
     application.h \
     module.h \
     json.h \
-    exception.h
+    exception.h \
+    currency.h
 
 RESOURCES += \
     qtquickcontrols2.conf

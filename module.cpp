@@ -3,13 +3,22 @@
 #include <QQmlExtensionPlugin>
 #include <QDebug>
 #include <QException>
+#include <QStandardPaths>
+#include <QStringList>
+#include <QJsonDocument>
 
 #include "module.h"
 #include "exception.h"
 
 using namespace gravio::wave;
 
-QString ApplicationPath::ApplicationUrlPath()
+#ifdef Q_OS_ANDROID
+std::wstring gProfile(L"android");
+#else
+std::wstring gProfile(L"desktop");
+#endif
+
+QString ApplicationPath::applicationDirPath()
 {
 #ifdef Q_OS_ANDROID
     return QString("assets:");
@@ -18,114 +27,151 @@ QString ApplicationPath::ApplicationUrlPath()
     return qApp->applicationDirPath();
 }
 
-QString ApplicationPath::ApplicationDirPath()
+QString ApplicationPath::logsDirPath()
 {
 #ifdef Q_OS_ANDROID
-    return QString("assets:");
+    return QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
 #endif
 
-    return qApp->applicationDirPath();
-}
-
-QString ApplicationPath::AssetUrlPath()
-{
-#ifdef Q_OS_ANDROID
-    return QString("file:");
-#endif
-
-    return QString("file:///");
+    return qApp->applicationDirPath() + "/logs";
 }
 
 //
 // ModuleWrapper
 //
 
-QString ModuleWrapper::Name() const
+QString ModuleWrapper::name() const
 {
     json::Value& lConfig = const_cast<json::Value&>(config_);
-    return QString::fromStdWString(lConfig[L"name"].GetString().c_str());
+    return QString::fromStdWString(lConfig[L"name"].getString().c_str());
 }
 
-QString ModuleWrapper::Caption() const
+QString ModuleWrapper::caption() const
 {
     json::Value& lConfig = const_cast<json::Value&>(config_);
-    return QString::fromStdWString(lConfig[L"caption"].GetString().c_str());
+    return QString::fromStdWString(lConfig[L"caption"].getString().c_str());
 }
 
-QString ModuleWrapper::IconFile() const
+QString ModuleWrapper::iconFile() const
 {
     json::Value& lConfig = const_cast<json::Value&>(config_);
-    return QString::fromStdWString(lConfig[L"iconFile"].GetString().c_str());
+    return QString::fromStdWString(lConfig[L"iconFile"].getString().c_str());
 }
 
-QString ModuleWrapper::IconTitleFile() const
+QString ModuleWrapper::iconTitleFile() const
 {
     json::Value& lConfig = const_cast<json::Value&>(config_);
-    return QString::fromStdWString(lConfig[L"iconTitleFile"].GetString().c_str());
+    return QString::fromStdWString(lConfig[L"iconTitleFile"].getString().c_str());
 }
 
-QString ModuleWrapper::Profile() const
+QString ModuleWrapper::profile() const
 {
     json::Value& lConfig = const_cast<json::Value&>(config_);
-    return QString::fromStdWString(lConfig[L"profile"].GetString().c_str());
+    return QString::fromStdWString(lConfig[L"profile"].getString().c_str());
 }
 
-QString ModuleWrapper::Source() const
+QString ModuleWrapper::source() const
 {
     json::Value& lConfig = const_cast<json::Value&>(config_);
-    return QString::fromStdWString(lConfig[L"source"].GetString().c_str());
+    return QString::fromStdWString(lConfig[L"source"].getString().c_str());
 }
 
-bool ModuleWrapper::Autoload() const
+bool ModuleWrapper::autoload() const
 {
     json::Value& lConfig = const_cast<json::Value&>(config_);
-    return lConfig[L"autoload"].GetBool();
+    return lConfig[L"autoload"].getBool();
 }
 
-int ModuleWrapper::CaptionOffset() const
+int ModuleWrapper::captionOffset() const
 {
     json::Value& lConfig = const_cast<json::Value&>(config_);
-    return lConfig[L"captionOffset"].GetInt();
+
+    json::Value lProfiles, lSettings;
+    if(lConfig.find(L"profiles", lProfiles) && lProfiles.find(gProfile, lSettings))
+    {
+        return lSettings[L"captionOffset"].getInt();
+    }
+
+    return lConfig[L"captionOffset"].getInt();
 }
 
-bool ModuleWrapper::IsLoaded() const
+int ModuleWrapper::iconLeftPadding() const
 {
-    return instance_.IsLoaded();
+    json::Value& lConfig = const_cast<json::Value&>(config_);
+
+    json::Value lProfiles, lSettings;
+    if(lConfig.find(L"profiles", lProfiles) && lProfiles.find(gProfile, lSettings))
+    {
+        return lSettings[L"iconLeftPadding"].getInt();
+    }
+
+    return lConfig[L"iconLeftPadding"].getInt();
 }
 
-int ModuleWrapper::Load()
+int ModuleWrapper::iconTitleTopPadding() const
 {
-    return instance_.Load(Profile(), Name(), engine_);
+    json::Value& lConfig = const_cast<json::Value&>(config_);
+
+    json::Value lProfiles, lSettings;
+    if(lConfig.find(L"profiles", lProfiles) && lProfiles.find(gProfile, lSettings))
+    {
+        return lSettings[L"iconTitleTopPadding"].getInt();
+    }
+
+    return lConfig[L"iconTitleTopPadding"].getInt();
 }
 
-QString ModuleWrapper::ModulePath() const
+bool ModuleWrapper::isLoaded() const
 {
-    QString lPath = ApplicationPath::ApplicationUrlPath() + "/" + Profile() + "/modules/" + Name() + "/";
+    return instance_.isLoaded();
+}
+
+int ModuleWrapper::load()
+{
+    return instance_.load(profile(), name(), engine_);
+}
+
+QString ModuleWrapper::modulePath() const
+{
+    QString lPath = ApplicationPath::applicationUrlPath() + "/" + profile() + "/modules/" + name() + "/";
     return lPath;
 }
 
-QString ModuleWrapper::IconFilePath() const
+QString ModuleWrapper::assetPrefix() const
 {
-    QString lFileName = ApplicationPath::AssetUrlPath() + ModulePath() + IconFile();
+    return ApplicationPath::assetUrlPath();
+}
+
+QString ModuleWrapper::iconFilePath() const
+{
+    QString lFileName = ApplicationPath::assetUrlPath() + modulePath() + iconFile();
     qDebug() << "Loading image" << lFileName;
     return lFileName;
 }
 
-QString ModuleWrapper::IconTitleFilePath() const
+QString ModuleWrapper::iconTitleFilePath() const
 {
-    QString lFileName = ApplicationPath::AssetUrlPath() + ModulePath() + IconTitleFile();
+    QString lFileName = ApplicationPath::assetUrlPath() + modulePath() + iconTitleFile();
     qDebug() << "Loading image" << lFileName;
     return lFileName;
 }
 
-QString ModuleWrapper::SourcePath() const
+QString ModuleWrapper::sourcePath() const
 {
-    QString lFileName = ApplicationPath::AssetUrlPath() + ModulePath() + Source();
+    QString lFileName = ApplicationPath::assetUrlPath() + modulePath() + source();
     qDebug() << "Returning source" << lFileName;
     return lFileName;
 }
 
-ModuleInstance& ModuleWrapper::Instance()
+QString ModuleWrapper::moduleDataPath() const
+{
+    QString lDataPath = ApplicationPath::dataDirPath() + "/" + name();
+    qDebug() << "Returning data path" << lDataPath;
+    return lDataPath;
+}
+
+
+ModuleInstance& ModuleWrapper::instance()
 {
     return instance_;
 }
@@ -134,11 +180,33 @@ ModuleInstance& ModuleWrapper::Instance()
 // ModuleInstance
 //
 
-int ModuleInstance::Load(const QString& profile, const QString& name, QQmlApplicationEngine* engine)
+QString ModuleInstance::prepareBin(const QString& name)
+{
+    QString lGlobalDataPath = ApplicationPath::dataDirPath();
+    QString lModuleDataPath = lGlobalDataPath + "/" + name;
+
+    QDir lCurrentDataDir(lModuleDataPath);
+    if (!lCurrentDataDir.exists())
+    {
+        lCurrentDataDir.setPath(lGlobalDataPath);
+        lCurrentDataDir.mkdir(name);
+    }
+
+    return lModuleDataPath;
+}
+
+bool ModuleInstance::isExecutable(QString& fileName)
+{
+    QStringList lParts = fileName.split(".");
+    if (lParts.length() > 0 && (lParts[lParts.length()-1] == "so" || lParts[lParts.length()-1] == "dll")) return true;
+    return false;
+}
+
+int ModuleInstance::load(const QString& profile, const QString& name, QQmlApplicationEngine* engine)
 {
     if (loaded_) return 1;
 
-    QDir lModulesDir(ApplicationPath::ApplicationDirPath());    // "./"
+    QDir lModulesDir(ApplicationPath::applicationDirPath());    // "./"
     lModulesDir.cd(profile);                                    // "./roaming"
     lModulesDir.cd("modules");                                  // "./roaming/modules"
     lModulesDir.cd(name);                                       // "./roaming/modules/contacts"
@@ -146,13 +214,45 @@ int ModuleInstance::Load(const QString& profile, const QString& name, QQmlApplic
     bool lFound = false;
     foreach (QString lFileName, lModulesDir.entryList(QDir::Files))
     {
-        QPluginLoader lLoader(lModulesDir.absoluteFilePath(lFileName));
-        QObject *lModule = lLoader.instance();
-        if (lModule)
+        if (isExecutable(lFileName))
         {
-            ((QQmlExtensionPlugin*)lModule)->initializeEngine(engine, ""); // preload module instance
-            ((QQmlExtensionPlugin*)lModule)->registerTypes(""); // register module classes
-            lFound = true;
+            QPluginLoader lLoader;
+#ifdef Q_OS_ANDROID
+            QString lRunLocation = prepareBin(name);
+            QString lDestFile = lRunLocation + "/" + lFileName;
+
+            if (QFile::exists(lDestFile)) QFile::remove(lDestFile);
+
+            if (!QFile::exists(lDestFile))
+            {
+                QFile::copy(lModulesDir.absoluteFilePath(lFileName), lDestFile);
+                QFile::setPermissions(lDestFile, QFile::ExeOther|QFile::ExeGroup|QFile::ExeUser|QFile::ExeOwner|QFile::WriteOwner|QFile::ReadOwner);
+            }
+
+            qDebug() << "Trying to load" << lDestFile;
+            lLoader.setFileName(lDestFile);
+#else
+            qDebug() << "Trying to load" << lModulesDir.absoluteFilePath(lFileName);
+            lLoader.setFileName(lModulesDir.absoluteFilePath(lFileName));
+#endif
+
+            QJsonDocument doc(lLoader.metaData());
+            QString strJson(doc.toJson(QJsonDocument::Compact));
+            qDebug() << strJson;
+
+            if (!lLoader.load())
+            {
+                qDebug() << "NOT loaded:" << lLoader.errorString();
+            }
+            else qDebug() << "LOADED";
+
+            QObject *lModule = lLoader.instance();
+            if (lModule)
+            {
+                ((QQmlExtensionPlugin*)lModule)->initializeEngine(engine, ""); // preload module instance
+                ((QQmlExtensionPlugin*)lModule)->registerTypes(""); // register module classes
+                lFound = true;
+            }
         }
     }
 
@@ -189,25 +289,33 @@ QVariant ModulesModel::data(const QModelIndex &index, int role) const
     switch (role)
     {
     case NameRole:
-        return modules_.at(index.row()).Name();
+        return modules_.at(index.row()).name();
     case CaptionRole:
-        return modules_.at(index.row()).Caption();
+        return modules_.at(index.row()).caption();
     case IconFileRole:
-        return modules_.at(index.row()).IconFilePath();
+        return modules_.at(index.row()).iconFilePath();
     case ProfileRole:
-        return modules_.at(index.row()).Profile();
+        return modules_.at(index.row()).profile();
     case AutoloadRole:
-        return modules_.at(index.row()).Autoload();
+        return modules_.at(index.row()).autoload();
     case LoadedRole:
-        return modules_.at(index.row()).IsLoaded();
+        return modules_.at(index.row()).isLoaded();
     case CaptionOffsetRole:
-        return modules_.at(index.row()).CaptionOffset();
+        return modules_.at(index.row()).captionOffset();
     case SourceRole:
-        return modules_.at(index.row()).SourcePath();
+        return modules_.at(index.row()).sourcePath();
     case IconTitleRole:
-        return modules_.at(index.row()).IconTitleFilePath();
+        return modules_.at(index.row()).iconTitleFilePath();
     case ModulePathRole:
-        return modules_.at(index.row()).ModulePath();
+        return modules_.at(index.row()).modulePath();
+    case IconLeftPaddingRole:
+        return modules_.at(index.row()).iconLeftPadding();
+    case IconTitleTopPaddingRole:
+        return modules_.at(index.row()).iconTitleTopPadding();
+    case AssetPrefixRole:
+        return modules_.at(index.row()).assetPrefix();
+    case ModuleDataPathRole:
+        return modules_.at(index.row()).moduleDataPath();
     default:
         return QVariant();
     }
@@ -226,6 +334,10 @@ QHash<int, QByteArray> ModulesModel::roleNames() const
     lRoles[SourceRole] = "source";
     lRoles[IconTitleRole] = "iconTitleFile";
     lRoles[ModulePathRole] = "modulePath";
+    lRoles[IconLeftPaddingRole] = "iconLeftPadding";
+    lRoles[IconTitleTopPaddingRole] = "iconTitleTopPadding";
+    lRoles[AssetPrefixRole] = "assetPrefix";
+    lRoles[ModuleDataPathRole] = "moduleDataPath";
 
     return lRoles;
 }
@@ -255,22 +367,22 @@ void ModulesModel::load(int index)
 {
     if (index < modules_.size())
     {
-        const_cast<ModuleWrapper&>(modules_.at(index)).Load();
+        const_cast<ModuleWrapper&>(modules_.at(index)).load();
     }
 }
 
-const ModuleWrapper& ModulesModel::AddModule(const ModuleWrapper& module)
+const ModuleWrapper& ModulesModel::addModule(const ModuleWrapper& module)
 {
-    if (index_.find(module.Name().toStdString()) == index_.end())
+    if (index_.find(module.name().toStdString()) == index_.end())
     {
         modules_.append(module);
-        index_.insert(module.Name().toStdString());
+        index_.insert(module.name().toStdString());
 
         return modules_.at(modules_.length()-1); // return last one
     }
     else
     {
-        qWarning() << "Module" << module.Name() << "already exists. Skipping...";
+        qWarning() << "Module" << module.name() << "already exists. Skipping...";
     }
 
     throw ModuleAlreadyExistsException();

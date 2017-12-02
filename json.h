@@ -3,13 +3,16 @@
 #define RAPIDJSON_HAS_STDSTRING 1
 #define RAPIDJSON_HAS_CXX11_RVALUE_REFS 0
 
-#include "json.h"
-
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/document.h"
 
+#include "exception.h"
+
 #include <vector>
+#include <locale>
+
+#include <QString>
 
 namespace gravio {
 namespace wave {
@@ -57,7 +60,7 @@ typedef rapidjson::PrettyWriter<RapidJsonOutputStream, rapidjson::UTF16<>, rapid
 class Error
 {
 public:
-    static std::string GetError(int);
+    static std::string getError(int);
 };
 
 class Value;
@@ -86,96 +89,124 @@ public:
     bool operator != (const ValueMemberIterator& iterator) { return iterator_ != ((ValueMemberIterator&)iterator).iterator_; }
     bool operator == (const ValueMemberIterator& iterator) { return iterator_ != ((ValueMemberIterator&)iterator).iterator_; }
 
-    Value GetValue();
+    Value getValue();
 
 private:
     RapidJsonValue::MemberIterator iterator_;
     RapidJsonDocument* document_;
 };
 
+class Document;
 class Value
 {
-private:
-    explicit Value() {}
+public:
+    explicit Value() { value_ = 0; document_ = 0; }
 
 public:
     Value(RapidJsonValue& value, RapidJsonDocument& document) : value_(&value), document_(&document) {}
     virtual ~Value() {}
 
     // get/set value
-    bool GetBool()
+    bool getBool()
     {
-        if (IsBool())
+        if (isBool())
         {
-            if (IsFalse()) return false;
+            if (isFalse()) return false;
             return true;
         }
 
         return false;
     }
 
-    void SetBool(bool value)
+    void setBool(bool value)
     {
+        checkReference();
         value_->SetBool(value);
     }
 
-    std::wstring GetString()
+    std::wstring getString()
     {
+        checkReference();
         return std::wstring(value_->GetString());
     }
 
-    void SetString(std::wstring& value)
+    std::string getAString()
     {
+        checkReference();
+
+        QString lString = QString::fromStdWString(value_->GetString()); // TODO: tricky
+        return lString.toStdString();
+    }
+
+    QString getQString()
+    {
+        checkReference();
+        return QString::fromStdWString(getString().c_str());
+    }
+
+    void setString(std::wstring& value)
+    {
+        checkReference();
         value_->SetString(value, document_->GetAllocator());
     }
 
-    int GetInt()
+    int getInt()
     {
+        checkReference();
         return value_->GetInt();
     }
 
-    void SetInt(int value)
+    void setInt(int value)
     {
+        checkReference();
         value_->SetInt(value);
     }
 
-    unsigned int GetUInt()
+    unsigned int getUInt()
     {
+        checkReference();
         return value_->GetUint();
     }
 
-    void SetUInt(unsigned int value)
+    void setUInt(unsigned int value)
     {
+        checkReference();
         value_->SetUint(value);
     }
 
-    int64_t GetInt64()
+    int64_t getInt64()
     {
+        checkReference();
         return value_->GetInt64();
     }
 
-    void SetInt64(int64_t value)
+    void setInt64(int64_t value)
     {
+        checkReference();
         value_->SetInt64(value);
     }
 
-    uint64_t GetUInt64()
+    uint64_t getUInt64()
     {
+        checkReference();
         return value_->GetUint64();
     }
 
-    void SetUInt64(uint64_t value)
+    void setUInt64(uint64_t value)
     {
+        checkReference();
         value_->SetUint64(value);
     }
 
-    double GetDouble()
+    double getDouble()
     {
+        checkReference();
         return value_->GetDouble();
     }
 
-    void SetDouble(double value)
+    void setDouble(double value)
     {
+        checkReference();
         value_->SetDouble(value);
     }
 
@@ -183,51 +214,75 @@ public:
     Value operator[](const std::wstring& name);
 
     // get array item by id
-    Value operator[](int index);
+    Value operator[](size_t index);
 
     // Iteration
-    ValueMemberIterator Begin();
-    ValueMemberIterator End();
+    ValueMemberIterator begin();
+    ValueMemberIterator end();
+
+    // Find value by name
+    bool find(const std::wstring&, Value&);
 
     // type check
-    ValueType Type();
-    bool IsNull()	{ return value_->IsNull(); }
-    bool IsFalse()	{ return value_->IsFalse(); }
-    bool IsTrue()	{ return value_->IsTrue(); }
-    bool IsBool()	{ return value_->IsBool(); }
-    bool IsObject()	{ return value_->IsObject(); }
-    bool IsArray()	{ return value_->IsArray(); }
-    bool IsNumber()	{ return value_->IsNumber(); }
-    bool IsInt()	{ return value_->IsInt(); }
-    bool IsUint()	{ return value_->IsUint(); }
-    bool IsInt64()	{ return value_->IsInt64(); }
-    bool IsUint64()	{ return value_->IsUint64(); }
-    bool IsDouble()	{ return value_->IsDouble(); }
-    bool IsString()	{ return value_->IsString(); }
+    ValueType type();
+    bool isNull()	const { return value_ ? value_->IsNull() : true; }
+    bool isFalse()	const { return value_ ? value_->IsFalse() : false; }
+    bool isTrue()	const { return value_ ? value_->IsTrue() : false; }
+    bool isBool()	const { return value_ ? value_->IsBool() : false; }
+    bool isObject()	const { return value_ ? value_->IsObject() : false; }
+    bool isArray()	const { return value_ ? value_->IsArray() : false; }
+    bool isNumber()	const { return value_ ? value_->IsNumber() : false; }
+    bool isInt()	const { return value_ ? value_->IsInt() : false; }
+    bool isUint()	const { return value_ ? value_->IsUint() : false; }
+    bool isInt64()	const { return value_ ? value_->IsInt64() : false; }
+    bool isUint64()	const { return value_ ? value_->IsUint64() : false; }
+    bool isDouble()	const { return value_ ? value_->IsDouble() : false; }
+    bool isString()	const { return value_ ? value_->IsString() : false; }
 
     // array methods
-    size_t Size() const { return value_->Size(); }
-    size_t Capacity() const { return value_->Capacity(); }
-    bool Empty() const { return value_->Empty(); }
+    size_t size() const { checkReference(); return value_->Size(); }
+    size_t capacity() const { checkReference(); return value_->Capacity(); }
+    bool empty() const { checkReference(); return value_->Empty(); }
 
     // make
-    void ToNull() { value_->SetNull(); }
-    void ToArray() { value_->SetArray(); }
-    void ToObject() { value_->SetObject(); }
+    void toNull() { checkReference(); value_->SetNull(); }
+    void toArray() { checkReference(); value_->SetArray(); }
+    void toObject() { checkReference(); value_->SetObject(); }
 
-    Value AddBool(const std::wstring&, bool);
-    Value AddString(const std::wstring&, const std::wstring&);
-    Value AddInt(const std::wstring&, int);
-    Value AddUInt(const std::wstring&, unsigned int);
-    Value AddInt64(const std::wstring&, int64_t);
-    Value AddUInt64(const std::wstring&, uint64_t);
-    Value AddDouble(const std::wstring&, double);
+    Value addBool(const std::wstring&, bool);
+    Value addString(const std::wstring&, const std::wstring&);
+    Value addInt(const std::wstring&, int);
+    Value addUInt(const std::wstring&, unsigned int);
+    Value addInt64(const std::wstring&, int64_t);
+    Value addUInt64(const std::wstring&, uint64_t);
+    Value addDouble(const std::wstring&, double);
 
-    Value AddObject(const std::wstring&);
-    Value AddArray(const std::wstring&);
-    Value NewArrayItem();
-    void MakeArrayItem(Value&);
-    Value NewItem();
+    Value addObject(const std::wstring&);
+    Value addArray(const std::wstring&);
+    Value newArrayItem() const;
+    void makeArrayItem(Value&);
+    Value newItem();
+
+    std::string toString();
+    std::wstring toWString();
+
+    virtual void writeToString(std::wstring&);
+    virtual void writeToString(std::string&);
+    virtual void writeToStream(std::vector<unsigned char>&);
+
+    virtual void clone(Document&);
+
+private:
+    void checkReference() const
+    {
+        if (!value_) NULL_REFERENCE_EXCEPTION();
+    }
+
+    void assign(RapidJsonValue* value, RapidJsonDocument* document)
+    {
+        value_ = value;
+        document_ = document;
+    }
 
 private:
     RapidJsonValue* value_;
@@ -237,23 +292,25 @@ private:
 // json::Document
 class Document : public Value
 {
+    friend class Value;
+
 public:
     Document() : Value(document_, document_) {}
     virtual ~Document() {}
-    void LoadFromString(const std::wstring&);
-    void LoadFromString(const std::string&);
-    void LoadFromStream(const std::vector<unsigned char>&);
-    void LoadFromFile(const std::string&);
-    bool HasErrors();
-    std::string LastError();
-    void WriteToString(std::wstring&);
-    void WriteToString(std::string&);
-    void WriteToStream(std::vector<unsigned char>&);
-    void SaveToFile(const std::string& dest);
+    void loadFromString(const std::wstring&);
+    void loadFromString(const std::string&);
+    void loadFromStream(const std::vector<unsigned char>&);
+    void loadFromFile(const std::string&);
+    bool hasErrors();
+    std::string lastError();
+    void writeToString(std::wstring&);
+    void writeToString(std::string&);
+    void writeToStream(std::vector<unsigned char>&);
+    void saveToFile(const std::string& dest);
     Value operator[](const std::wstring& name);
-    Value AddObject(const std::wstring&);
-    Value AddArray(const std::wstring&);
-    void Clone(Document&);
+    Value addObject(const std::wstring&);
+    Value addArray(const std::wstring&);
+    void clone(Document&);
 
 protected:
     RapidJsonDocument document_;

@@ -68,6 +68,16 @@ namespace wave {
 
 const char APP_NAME[] = { "gravio-app" };
 
+class Helper : public QObject
+{
+    Q_OBJECT
+public:
+    Q_INVOKABLE QString fileNameFromPath(const QString& filePath) const
+    {
+        return QFileInfo(filePath).fileName();
+    }
+};
+
 /**
  * @brief The Application class
  * Entry point to the gravio.app
@@ -77,14 +87,26 @@ class Application : public QQuickItem
     Q_OBJECT
 
     Q_PROPERTY(QString profile READ profile)
+    Q_PROPERTY(QString assetsPath READ assetsPath)
+    Q_PROPERTY(QStringList picturesLocation READ picturesLocation)
 
 public:
     Application(QGuiApplication& app) : app_(app) { profile_ = "roaming"; } // may be "local"
 
-    int Load();
-    int Execute();
+    int load();
+    int execute();
 
     QString profile() const { return profile_; }
+    QString assetsPath() const
+    {
+        QString lAssetsPath = ApplicationPath::assetUrlPath() + ApplicationPath::applicationUrlPath() + "/" + profile_;
+        return lAssetsPath;
+    }
+
+    QStringList picturesLocation() const
+    {
+        return QStandardPaths::standardLocations(QStandardPaths::PicturesLocation);
+    }
 
 private:
     QGuiApplication& app_;
@@ -96,6 +118,7 @@ private:
     json::Document appConfig_;
 
     ModulesModel modules_;
+    Helper helper_;
 };
 
 } // wave

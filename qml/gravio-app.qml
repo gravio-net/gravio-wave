@@ -151,15 +151,26 @@ ApplicationWindow
                 Image
                 {
                     id: titleLogo
+                    height: getHeight()
                     horizontalAlignment: Qt.AlignHCenter
                     verticalAlignment: Qt.AlignVCenter
                     fillMode: Image.PreserveAspectFit
                     source: stackView.depth > 1 ? (listView.currentItem ? modulesModel.get(listView.currentIndex).iconTitleFile : "") : "images/logo.png"
 
+                    function getHeight()
+                    {
+                        if (stackView.depth > 1) return 32;
+                        return toolBar.height;
+                    }
+
                     onSourceChanged:
                     {
-                        if (stackView.depth > 1) y = -4.0;
-                        else y = -6.0;
+                        if (stackView.depth > 1)
+                        {
+                            if (listView.currentItem) y = modulesModel.get(listView.currentIndex).iconTitleTopPadding;
+                            else y = -4.0;
+                        }
+                        else y = -10.0;
                     }
                 }
             }
@@ -368,16 +379,16 @@ ApplicationWindow
                     {
                         text: caption
                         width: rect.width
-                        height: icon.height + metrics.height + 7.0
+                        height: icon.height + metrics.height + 7.0 //TODO:
                         leftPadding: rect.width/2.0 - metrics.width/2.0 - captionOffset
-                        topPadding: icon.height + 3.0
+                        topPadding: icon.height
 
                         Image
                         {
                             id: icon
                             width: 64
                             height: 64
-                            x: rect.width/2.0 - icon.width/2.0 - 5.0
+                            x: rect.width/2.0 - icon.width/2.0 + iconLeftPadding
                             fillMode: Image.PreserveAspectFit
                             source: iconFile
                         }
@@ -463,32 +474,34 @@ ApplicationWindow
         }
     }
 
-    Dialog {
-        id: aboutDialog
+    Dialog
+    {
+        id: errorDialog
         modal: true
         focus: true
-        title: "About"
+        title: "Error"
         x: (window.width - width) / 2
         y: window.height / 6
         width: Math.min(window.width, window.height) / 3 * 2
-        contentHeight: aboutColumn.height
+        contentHeight: erorColumn.height
+        standardButtons: Dialog.Ok
 
-        Column {
-            id: aboutColumn
+        function show(msg)
+        {
+            console.log(msg);
+            errorDialog.errorText.text = msg;
+            errorDialog.open();
+        }
+
+        Column
+        {
+            id: erorColumn
             spacing: 20
 
-            Label {
-                width: aboutDialog.availableWidth
-                text: "The Qt Quick Controls 2 module delivers the next generation user interface controls based on Qt Quick."
-                wrapMode: Label.Wrap
-                font.pixelSize: 12
-            }
-
-            Label {
-                width: aboutDialog.availableWidth
-                text: "In comparison to the desktop-oriented Qt Quick Controls 1, Qt Quick Controls 2 "
-                    + "are an order of magnitude simpler, lighter and faster, and are primarily targeted "
-                    + "towards embedded and mobile platforms."
+            Label
+            {
+                id: errorText
+                width: errorDialog.availableWidth
                 wrapMode: Label.Wrap
                 font.pixelSize: 12
             }

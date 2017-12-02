@@ -20,20 +20,20 @@ class Logger
 public:
     Logger(QString path, QString pattern);
 
-    void LogInfo(const QString& msg);
-    void LogInfo(const QString& category, const QString& msg);
+    void logInfo(const QString& msg);
+    void logInfo(const QString& category, const QString& msg);
 
-    void LogWarn(const QString& msg);
-    void LogWarn(const QString& category, const QString& msg);
+    void logWarn(const QString& msg);
+    void logWarn(const QString& category, const QString& msg);
 
-    void LogDebug(const QString& msg);
-    void LogDebug(const QString& category, const QString& msg);
+    void logDebug(const QString& msg);
+    void logDebug(const QString& category, const QString& msg);
 
-    void LogCritical(const QString& msg);
-    void LogCritical(const QString& category, const QString& msg);
+    void logCritical(const QString& msg);
+    void logCritical(const QString& category, const QString& msg);
 
-    void LogFatal(const QString& msg);
-    void LogFatal(const QString& category, const QString& msg);
+    void logFatal(const QString& msg);
+    void logFatal(const QString& category, const QString& msg);
 
     void Log(QtMsgType type, const QString& category, const QString& msg);
 

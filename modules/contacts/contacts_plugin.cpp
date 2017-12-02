@@ -5,15 +5,16 @@
 #include <QQmlEngine>
 #include <QQmlContext>
 
-void ContactsPlugin::registerTypes(const char *uri)
+void ContactsPlugin::registerTypes(const char *)
 {
-    qInfo() << "[ContactsPlugin/registerTypesEngine]" << "ContactsViewModel registered with" << URI;
-    qmlRegisterType<ContactsViewModel>(URI, 1, 0, NAME);
+    qmlRegisterType<gravio::wave::Contact>("net.gravio.wave.modules.contacts", 1, 0, "Contact");
+    qmlRegisterType<gravio::wave::ContactAddress>("net.gravio.wave.modules.contacts", 1, 0, "ContactAddress");
+    qmlRegisterType<gravio::wave::ContactAddresses>("net.gravio.wave.modules.contacts", 1, 0, "ContactAddresses");
 }
 
 void ContactsPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
-    qInfo() << "[ContactsPlugin/initializeEngine]" << "ContactsViewModel initialization...";
+    qInfo() << "[ContactsPlugin/initializeEngine]" << "Contacts model initialization...";
     QQmlExtensionPlugin::initializeEngine(engine, uri);
 
     engine->rootContext()->setContextProperty("contactsModel", &contacts_);

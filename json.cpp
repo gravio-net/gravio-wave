@@ -6,7 +6,7 @@ using namespace gravio::wave::json;
 
 rapidjson::CrtAllocator gAllocator;
 
-std::string Error::GetError(int code)
+std::string Error::getError(int code)
 {
 	switch(code)
 	{
@@ -33,104 +33,146 @@ std::string Error::GetError(int code)
 }
 
 //
-// JsonValue
+// Iterator
 //
-ValueType Value::Type()
+Value ValueMemberIterator::getValue()
 {
-    if (IsBool()) return ValueType::Bool;
-    else if(IsString()) return ValueType::String;
-    else if (IsInt()) return ValueType::Int;
-    else if (IsUint()) return ValueType::Uint;
-    else if (IsInt64()) return ValueType::Int64;
-    else if (IsUint64()) return ValueType::Uint64;
-    else if (IsDouble()) return ValueType::Double;
-    else if (IsObject()) return ValueType::Object;
-    else if (IsArray()) return ValueType::Array;
+    return Value(iterator_->value, *document_);
+}
+
+//
+// Value
+//
+ValueType Value::type()
+{
+    if (isBool()) return ValueType::Bool;
+    else if(isString()) return ValueType::String;
+    else if (isInt()) return ValueType::Int;
+    else if (isUint()) return ValueType::Uint;
+    else if (isInt64()) return ValueType::Int64;
+    else if (isUint64()) return ValueType::Uint64;
+    else if (isDouble()) return ValueType::Double;
+    else if (isObject()) return ValueType::Object;
+    else if (isArray()) return ValueType::Array;
     return ValueType::Null;
 }
 
 Value Value::operator[](const std::wstring& name)
 {
+    checkReference();
     return Value(value_->operator[](name), *document_);
 }
 
-Value Value::operator[](int index)
+Value Value::operator[](size_t index)
 {
+    checkReference();
     return Value(value_->operator[](index), *document_);
 }
 
-Value Value::AddBool(const std::wstring& name, bool value)
+bool Value::find(const std::wstring& name, Value& value)
 {
+    checkReference();
+
+    if (value_->IsNull()) return false;
+
+    RapidJsonValue::MemberIterator lIterator = value_->FindMember(name);
+    if (lIterator != value_->MemberEnd())
+    {
+        value.assign(&lIterator->value, document_);
+        return true;
+    }
+
+    return false;
+}
+
+Value Value::addBool(const std::wstring& name, bool value)
+{
+    checkReference();
+
     RapidJsonValue lName, lValue; lName.SetString(name, document_->GetAllocator());
-    if (!IsObject()) value_->SetObject();
+    if (!isObject()) value_->SetObject();
 
     lValue.SetBool(value);
 
     return Value(value_->AddMember(lName, lValue, document_->GetAllocator()), *document_);
 }
 
-Value Value::AddString(const std::wstring& name, const std::wstring& value)
+Value Value::addString(const std::wstring& name, const std::wstring& value)
 {
+    checkReference();
+
     RapidJsonValue lName, lValue; lName.SetString(name, document_->GetAllocator());
-    if (!IsObject()) value_->SetObject();
+    if (!isObject()) value_->SetObject();
 
     lValue.SetString(value, document_->GetAllocator());
 
     return Value(value_->AddMember(lName, lValue, document_->GetAllocator()), *document_);
 }
 
-Value Value::AddInt(const std::wstring& name, int value)
+Value Value::addInt(const std::wstring& name, int value)
 {
+    checkReference();
+
     RapidJsonValue lName, lValue; lName.SetString(name, document_->GetAllocator());
-    if (!IsObject()) value_->SetObject();
+    if (!isObject()) value_->SetObject();
 
     lValue.SetInt(value);
 
     return Value(value_->AddMember(lName, lValue, document_->GetAllocator()), *document_);
 }
 
-Value Value::AddUInt(const std::wstring& name, unsigned int value)
+Value Value::addUInt(const std::wstring& name, unsigned int value)
 {
+    checkReference();
+
     RapidJsonValue lName, lValue; lName.SetString(name, document_->GetAllocator());
-    if (!IsObject()) value_->SetObject();
+    if (!isObject()) value_->SetObject();
 
     lValue.SetUint(value);
 
     return Value(value_->AddMember(lName, lValue, document_->GetAllocator()), *document_);
 }
 
-Value Value::AddInt64(const std::wstring& name, int64_t value)
+Value Value::addInt64(const std::wstring& name, int64_t value)
 {
+    checkReference();
+
     RapidJsonValue lName, lValue; lName.SetString(name, document_->GetAllocator());
-    if (!IsObject()) value_->SetObject();
+    if (!isObject()) value_->SetObject();
 
     lValue.SetInt64(value);
 
     return Value(value_->AddMember(lName, lValue, document_->GetAllocator()), *document_);
 }
 
-Value Value::AddUInt64(const std::wstring& name, uint64_t value)
+Value Value::addUInt64(const std::wstring& name, uint64_t value)
 {
+    checkReference();
+
     RapidJsonValue lName, lValue; lName.SetString(name, document_->GetAllocator());
-    if (!IsObject()) value_->SetObject();
+    if (!isObject()) value_->SetObject();
 
     lValue.SetUint64(value);
 
     return Value(value_->AddMember(lName, lValue, document_->GetAllocator()), *document_);
 }
 
-Value Value::AddDouble(const std::wstring& name, double value)
+Value Value::addDouble(const std::wstring& name, double value)
 {
+    checkReference();
+
     RapidJsonValue lName, lValue; lName.SetString(name, document_->GetAllocator());
-    if (!IsObject()) value_->SetObject();
+    if (!isObject()) value_->SetObject();
 
     lValue.SetDouble(value);
 
     return Value(value_->AddMember(lName, lValue, document_->GetAllocator()), *document_);
 }
 
-Value Value::AddObject(const std::wstring& name)
+Value Value::addObject(const std::wstring& name)
 {
+    checkReference();
+
 	RapidJsonValue lName, lValue;
 	lName.SetString(name, document_->GetAllocator()); lValue.SetObject();
 	value_->AddMember(lName, lValue, document_->GetAllocator());
@@ -138,8 +180,10 @@ Value Value::AddObject(const std::wstring& name)
     return Value(value_->FindMember(name)->value, *document_);
 }
 
-Value Value::AddArray(const std::wstring& name)
+Value Value::addArray(const std::wstring& name)
 {
+    checkReference();
+
 	RapidJsonValue lName, lValue;
 	lName.SetString(name, document_->GetAllocator());
 	lValue.SetArray();
@@ -148,21 +192,25 @@ Value Value::AddArray(const std::wstring& name)
     return Value(value_->FindMember(name)->value, *document_);
 }
 
-Value Value::NewArrayItem()
+Value Value::newArrayItem() const
 {
+    checkReference();
+
 	RapidJsonValue lValue;
-	if (!IsArray()) value_->SetArray();
+    if (!isArray()) value_->SetArray();
 	value_->PushBack(lValue, document_->GetAllocator());
 
     return Value(value_->operator[](value_->Size()-1), *document_);
 }
 
-void Value::MakeArrayItem(Value& value)
+void Value::makeArrayItem(Value& value)
 {
 }
 
-Value Value::NewItem()
+Value Value::newItem()
 {
+    checkReference();
+
 	RapidJsonValue lName(L"__raw__"), lValue;
 	value_->AddMember(lName, lValue, document_->GetAllocator());
 	
@@ -172,45 +220,101 @@ Value Value::NewItem()
     return Value(lMember->value, *document_);
 }
 
-// Iteration
-ValueMemberIterator Value::Begin()
+std::string Value::toString()
 {
+    std::string lData;
+    writeToString(lData);
+    return lData;
+}
+
+std::wstring Value::toWString()
+{
+    std::wstring lData;
+    writeToString(lData);
+    return lData;
+}
+
+void Value::writeToString(std::wstring& stream)
+{
+    checkReference();
+
+    RapidJsonStringBuffer lBuffer;
+    RapidJsonWriter lWriter(lBuffer);
+    value_->Accept(lWriter);
+    stream.insert(0, lBuffer.GetString());
+}
+
+void Value::writeToString(std::string& stream)
+{
+    checkReference();
+
+    RapidJsonUTF8StringBuffer lBuffer;
+    RapidJsonOutputStream lOutStream(lBuffer, false);
+    RapidJsonUTF8PrettyWriter lWriter(lOutStream);
+    value_->Accept(lWriter);
+    stream.insert(0, lBuffer.GetString());
+}
+
+void Value::writeToStream(std::vector<unsigned char>& stream)
+{
+    checkReference();
+
+    RapidJsonUTF8StringBuffer lBuffer;
+    RapidJsonOutputStream lOutStream(lBuffer, false);
+    RapidJsonUTF8PrettyWriter lWriter(lOutStream);
+    value_->Accept(lWriter);
+    stream.resize(lBuffer.GetSize());
+    memcpy(&stream[0], lBuffer.GetString(), lBuffer.GetSize());
+}
+
+// Iteration
+ValueMemberIterator Value::begin()
+{
+    checkReference();
+
     return ValueMemberIterator(value_->MemberBegin(), *document_);
 }
 
-ValueMemberIterator Value::End()
+ValueMemberIterator Value::end()
 {
+    checkReference();
+
     return ValueMemberIterator(value_->MemberEnd(), *document_);
+}
+
+void Value::clone(Document& other)
+{
+    other.document_.CopyFrom(*value_, other.document_.GetAllocator());
 }
 
 //
 // Document
 //
-void Document::LoadFromString(const std::wstring& source)
+void Document::loadFromString(const std::wstring& source)
 {
 	if(document_.Parse(source).HasParseError())
 	{
-        throw std::string("[JsonDocument/LoadFromString/Error]: ") + Error::GetError(document_.GetParseError());
+        throw Exception(std::string("[JsonDocument/LoadFromString/Error]: ") + Error::getError(document_.GetParseError()));
 	}
 }
 
-void Document::LoadFromString(const std::string& source)
+void Document::loadFromString(const std::string& source)
 {
 	if(document_.Parse<0, rapidjson::UTF8<> >(source).HasParseError())
 	{
-        throw std::string("[JsonDocument/LoadFromString/Error]: ") + Error::GetError(document_.GetParseError());
+        throw Exception(std::string("[JsonDocument/LoadFromString/Error]: ") + Error::getError(document_.GetParseError()));
 	}
 }
 
-void Document::LoadFromStream(const std::vector<unsigned char>& source)
+void Document::loadFromStream(const std::vector<unsigned char>& source)
 {
 	if(document_.Parse<0, rapidjson::UTF8<> >((char*)&source[0], source.size()).HasParseError())
 	{
-        throw std::string("[JsonDocument/LoadFromStream/Error]: ") + Error::GetError(document_.GetParseError());
+        throw Exception(std::string("[JsonDocument/LoadFromStream/Error]: ") + Error::getError(document_.GetParseError()));
 	}
 }
 
-void Document::LoadFromFile(const std::string& source)
+void Document::loadFromFile(const std::string& source)
 {
     QFile lFile(QString(source.c_str()));
     if (!lFile.open(QIODevice::ReadOnly | QIODevice::Text)) return;
@@ -222,50 +326,46 @@ void Document::LoadFromFile(const std::string& source)
 	
     if(document_.Parse(lText.toStdWString()).HasParseError())
 	{
-        throw std::string("[JsonDocument/LoadFromFile/Error]: ") + Error::GetError(document_.GetParseError());
+        throw Exception(std::string("[JsonDocument/LoadFromFile/Error]: ") + Error::getError(document_.GetParseError()));
 	}
 }
 
-void Document::SaveToFile(const std::string& dest)
+void Document::saveToFile(const std::string& dest)
 {
-    // WriteToString
+    QFile lFile(QString(dest.c_str()));
+    if (!lFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) return;
+
+    // get source
+    std::string lStream;
+    writeToString(lStream);
+
+    lFile.write(lStream.c_str(), lStream.length());
+    lFile.close();
 }
 
-bool Document::HasErrors()
+bool Document::hasErrors()
 {
 	return document_.HasParseError();
 }
 
-std::string Document::LastError()
+std::string Document::lastError()
 {
-    return Error::GetError(document_.GetParseError());
+    return Error::getError(document_.GetParseError());
 }
 
-void Document::WriteToString(std::wstring& stream)
+void Document::writeToString(std::wstring& stream)
 {
-	RapidJsonStringBuffer lBuffer;
-	RapidJsonWriter lWriter(lBuffer);
-	document_.Accept(lWriter);
-	stream.insert(0, lBuffer.GetString());
+    Value::writeToString(stream);
 }
 
-void Document::WriteToString(std::string& stream)
+void Document::writeToString(std::string& stream)
 {
-	RapidJsonUTF8StringBuffer lBuffer;
-	RapidJsonOutputStream lOutStream(lBuffer, false);
-	RapidJsonUTF8PrettyWriter lWriter(lOutStream);
-	document_.Accept(lWriter);
-	stream.insert(0, lBuffer.GetString());
+    Value::writeToString(stream);
 }
 
-void Document::WriteToStream(std::vector<unsigned char>& stream)
+void Document::writeToStream(std::vector<unsigned char>& stream)
 {
-	RapidJsonUTF8StringBuffer lBuffer;
-	RapidJsonOutputStream lOutStream(lBuffer, false);
-	RapidJsonUTF8PrettyWriter lWriter(lOutStream);
-	document_.Accept(lWriter);
-	stream.resize(lBuffer.GetSize());
-	memcpy(&stream[0], lBuffer.GetString(), lBuffer.GetSize());
+    Value::writeToStream(stream);
 }
 
 Value Document::operator[](const std::wstring& name)
@@ -273,17 +373,17 @@ Value Document::operator[](const std::wstring& name)
     return Value(document_[name], document_);
 }
 
-Value Document::AddObject(const std::wstring& name)
+Value Document::addObject(const std::wstring& name)
 {
-    return Value::AddObject(name);
+    return Value::addObject(name);
 }
 
-Value Document::AddArray(const std::wstring& name)
+Value Document::addArray(const std::wstring& name)
 {
-    return Value::AddArray(name);
+    return Value::addArray(name);
 }
 
-void Document::Clone(Document& other)
+void Document::clone(Document& other)
 {
     other.document_.CopyFrom(document_, other.document_.GetAllocator());
 }

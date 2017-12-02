@@ -9,11 +9,17 @@ CONFIG += plugin c++11
 # Input
 SOURCES += \
     contacts_plugin.cpp \
-    contacts.cpp
+    contacts.cpp \
+    contact.cpp \
+    contactsdb.cpp \
+    ../../json.cpp
 
 HEADERS += \
     contacts_plugin.h \
-    contacts.h
+    contacts.h \
+    contact.h \
+    contactsdb.h \
+    ../../json.h
 
 #DISTFILES = qmldir \
 #    contacts_ui.qml
@@ -33,3 +39,7 @@ HEADERS += \
 #    target.path = $$installPath
 #    INSTALLS += target qmldir
 #}
+
+DISTFILES += \
+    contacts_ui.qml \
+    filedialog.qml
