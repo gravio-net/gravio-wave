@@ -1,35 +1,131 @@
 import QtQuick 2.9
-import QtQuick.Dialogs 1.0
-import Qt.labs.platform 1.0
+import QtQuick.Layouts 1.3
+import QtQuick.Controls 2.2
+import QtGraphicalEffects 1.0
+import Qt.labs.folderlistmodel 2.1
+import QtMultimedia 5.8
 
-FileDialog
+//
+// Picture choose dialog
+//
+Dialog
 {
-    id: fileDialog
-    title: "Please choose picture"
-    folder: StandardPaths.standardLocations(StandardPaths.PicturesLocation)[0]
-    //folder: shortcuts.pictures
-    //selectExisting: true
-    //selectMultiple: false
-    //selectFolder: false
-    nameFilters: [ "Image files (*.jpg *.png)", "All files (*)" ]
+    id: pictureDialog
+    modal: true
+    focus: true
+    title: "Choose picture"
 
+    x: 5
+    y: 10
+    width: window.width - 30
+    height: window.height - 100
+
+    standardButtons: Dialog.Ok | Dialog.Cancel
+
+    property string fileURL;
     property variant caller;
 
-    function execute(component)
+    function selectPicture(parent)
     {
-        caller = component;
-        this.open();
+        pictureView.currentIndex = -1;
+
+        caller = parent;
+        pictureDialog.open();
     }
 
     onAccepted:
     {
-        caller.applyChoise(fileDialog.currentFile);
-        fileDialog.close();
+        caller.acceptSelection(fileURL);
+        if (pictureView.prevCheckImage != null) pictureView.prevCheckImage.checked = false;
+        pictureDialog.close();
     }
-
     onRejected:
     {
-        fileDialog.close();
+        if (pictureView.prevCheckImage != null) pictureView.prevCheckImage.checked = false;
+        pictureDialog.close();
+    }
+
+    FolderListModel
+    {
+        id: pictureListModel
+        nameFilters: [ "*.jpg", "*.png" ]
+        showDirs: false
+
+        Component.onCompleted:
+        {
+            pictureListModel.folder = gravioApp.picturesLocation[0]; // but there are some directories may be...
+
+            /*
+            for(var lPath in gravioApp.picturesLocation)
+            {
+                console.log(gravioApp.picturesLocation[lPath]);
+            }
+            */
+        }
+    }
+
+    Rectangle
+    {
+        clip: true
+        anchors.fill: parent
+
+        ListView
+        {
+            id: pictureView
+            anchors.fill: parent
+
+            focus: true
+            currentIndex: -1
+
+            model: pictureListModel
+            property variant prevCheckImage;
+
+            delegate: ItemDelegate
+            {
+                id: pictureDelegate
+
+                contentItem: Row
+                {
+                    Rectangle
+                    {
+                        id: pictureRow
+                        width: pictureView.width - 10
+                        height: 150
+                        color: "transparent"
+
+                        Image
+                        {
+                            id: pictureImage
+                            height: 150
+                            width: 150
+                            fillMode: Image.PreserveAspectFit
+                            source: fileURL
+                        }
+                        CheckBox
+                        {
+                            id: checkImage
+                            x: pictureImage.width + 5
+                            y: pictureImage.height/2 - checkImage.height / 2
+
+                            onClicked:
+                            {
+                                if(checkImage.checked)
+                                {
+                                    if (pictureView.prevCheckImage != null) pictureView.prevCheckImage.checked = false;
+                                    pictureView.prevCheckImage = checkImage;
+                                    checkImage.checked = true; // recheck
+
+                                    //console.log(fileURL);
+                                    pictureView.currentIndex = index;
+                                    pictureDialog.fileURL = fileURL;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            ScrollIndicator.vertical: ScrollIndicator {}
+        }
     }
 }
-

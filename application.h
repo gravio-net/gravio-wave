@@ -16,8 +16,13 @@
 
 #include <QQuickItem>
 
+#ifdef Q_OS_ANDROID
+#include <QAndroidJniObject>
+#endif
+
 #include "json.h"
 #include "module.h"
+#include "account.h"
 
 /**
  * @brief Modules and app configuration
@@ -105,7 +110,27 @@ public:
 
     QStringList picturesLocation() const
     {
-        return QStandardPaths::standardLocations(QStandardPaths::PicturesLocation);
+#ifdef Q_OS_ANDROID
+        QStringList lList;
+
+        QAndroidJniObject lMediaDir = QAndroidJniObject::callStaticObjectMethod("android/os/Environment", "getExternalStorageDirectory", "()Ljava/io/File;");
+        QAndroidJniObject lMediaPath = lMediaDir.callObjectMethod( "getAbsolutePath", "()Ljava/lang/String;" );
+        QString lPicturesPath0 = lMediaPath.toString()+"/DCIM/Camera";
+        QString lPicturesPath1 = lMediaPath.toString()+"/DCIM";
+
+        if (QDir(lPicturesPath0).exists()) lList << "file://" + lPicturesPath0;
+        if (QDir(lPicturesPath1).exists()) lList << "file://" + lPicturesPath1;
+
+        lList << "file://" + QStandardPaths::writableLocation(QStandardPaths::PicturesLocation)
+              << "file://" + QStandardPaths::writableLocation(QStandardPaths::MoviesLocation);
+
+        return lList;
+#else
+        QStringList lList;
+        lList << "file:///" + QStandardPaths::writableLocation(QStandardPaths::PicturesLocation)
+              << "file:///" + QStandardPaths::writableLocation(QStandardPaths::MoviesLocation);
+        return lList;
+#endif
     }
 
 private:
@@ -118,6 +143,7 @@ private:
     json::Document appConfig_;
 
     ModulesModel modules_;
+    Account account_;
     Helper helper_;
 };
 

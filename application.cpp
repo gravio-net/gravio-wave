@@ -74,7 +74,12 @@ int Application::execute()
 {
     QQuickStyle::setStyle(style_); // default style
 
+    qmlRegisterType<gravio::wave::Account>("net.gravio.wave.account", 1, 0, "Account");
+    qmlRegisterType<gravio::wave::AccountAddress>("net.gravio.wave.account", 1, 0, "AccountAddress");
+    qmlRegisterType<gravio::wave::AccountAddresses>("net.gravio.wave.account", 1, 0, "AccountAddresses");
+
     engine_.rootContext()->setContextProperty("gravioApp", this);
+    engine_.rootContext()->setContextProperty("gravioAccount", &account_);
     engine_.rootContext()->setContextProperty("modulesModel", &modules_);
     engine_.rootContext()->setContextProperty("appHelper", &helper_);
     engine_.rootContext()->setContextProperty("availableStyles", QQuickStyle::availableStyles());

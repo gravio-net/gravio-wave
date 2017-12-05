@@ -1,15 +1,15 @@
-#include "contact.h"
-#include "contactsdb.h"
-#include "../../module.h"
+#include "account.h"
+#include "accountdb.h"
+#include "module.h"
 
 #include <QFileInfo>
 
 using namespace gravio::wave;
 
 //
-// ContactAddress
+// AccountAddress
 //
-void ContactAddress::fromJSON(json::Value& root)
+void AccountAddress::fromJSON(json::Value& root)
 {
     setAddressType(Currency::type(root[L"addressType"].getAString()));
     setAddress(root[L"address"].getQString());
@@ -18,7 +18,7 @@ void ContactAddress::fromJSON(json::Value& root)
     setPrimary(root[L"primary"].getBool());
 }
 
-void ContactAddress::toJSON(json::Value& root)
+void AccountAddress::toJSON(json::Value& root)
 {
     std::string lAddressType = Currency::name(addressType());
     root.addString(L"addressType", std::wstring(lAddressType.begin(), lAddressType.end()));
@@ -29,19 +29,19 @@ void ContactAddress::toJSON(json::Value& root)
 }
 
 //
-// ContactAddresses
+// AccountAddresses
 //
-ContactAddresses::ContactAddresses(QObject *parent): QAbstractListModel(parent), contact_(0)
+AccountAddresses::AccountAddresses(QObject *parent): QAbstractListModel(parent), account_(0)
 {
 
 }
 
-ContactAddresses::ContactAddresses(Contact* contact, QObject *parent): QAbstractListModel(parent), contact_(contact)
+AccountAddresses::AccountAddresses(Account* account, QObject *parent): QAbstractListModel(parent), account_(account)
 {
 
 }
 
-ContactAddresses::~ContactAddresses()
+AccountAddresses::~AccountAddresses()
 {
     //
     // Always delete objects
@@ -50,7 +50,7 @@ ContactAddresses::~ContactAddresses()
     addresses_.clear();
 }
 
-int ContactAddresses::rowCount(const QModelIndex &parent) const
+int AccountAddresses::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid())
     {
@@ -60,7 +60,7 @@ int ContactAddresses::rowCount(const QModelIndex &parent) const
     return addresses_.size();
 }
 
-QVariant ContactAddresses::data(const QModelIndex &index, int role) const
+QVariant AccountAddresses::data(const QModelIndex &index, int role) const
 {
     if (!index.isValid())
     {
@@ -84,7 +84,7 @@ QVariant ContactAddresses::data(const QModelIndex &index, int role) const
     }
 }
 
-QHash<int, QByteArray> ContactAddresses::roleNames() const
+QHash<int, QByteArray> AccountAddresses::roleNames() const
 {
     QHash<int, QByteArray> lRoles = QAbstractListModel::roleNames();
     lRoles[AddressTypeRole] = "addressType";
@@ -96,24 +96,24 @@ QHash<int, QByteArray> ContactAddresses::roleNames() const
     return lRoles;
 }
 
-ContactAddress* ContactAddresses::getAddress(int idx)
+AccountAddress* AccountAddresses::getAddress(int idx)
 {
     if (idx < addresses_.size()) return addresses_.at(idx);
     return 0;
 }
 
-void ContactAddresses::fromJSON(json::Value& list)
+void AccountAddresses::fromJSON(json::Value& list)
 {
     for(size_t lIdx = 0; lIdx < list.size(); lIdx++)
     {
-        ContactAddress* lAddress = new ContactAddress();
+        AccountAddress* lAddress = new AccountAddress();
         const json::Value& lItem = list[lIdx];
         lAddress->fromJSON(const_cast<json::Value&>(lItem));
         addresses_.push_back(lAddress);
     }
 }
 
-void ContactAddresses::toJSON(json::Value& root)
+void AccountAddresses::toJSON(json::Value& root)
 {
     for(int lIdx = 0; lIdx < addresses_.size(); lIdx++)
     {
@@ -122,13 +122,13 @@ void ContactAddresses::toJSON(json::Value& root)
     }
 }
 
-QString ContactAddresses::addAddress(QString addressType, QString address, QString label, bool primary)
+QString AccountAddresses::addAddress(QString addressType, QString address, QString label, bool primary)
 {
     beginResetModel();
 
     // TODO: check unique on label, address and reset primary if needed
 
-    ContactAddress* lAddress = new ContactAddress(Currency::type(addressType.toStdString()), address, label, primary);
+    AccountAddress* lAddress = new AccountAddress(Currency::type(addressType.toStdString()), address, label, primary);
     addresses_.push_back(lAddress);
 
     endResetModel();
@@ -136,7 +136,7 @@ QString ContactAddresses::addAddress(QString addressType, QString address, QStri
     return QString("");
 }
 
-QString ContactAddresses::updateModel()
+QString AccountAddresses::updateModel()
 {
     beginResetModel();
     endResetModel();
@@ -144,7 +144,7 @@ QString ContactAddresses::updateModel()
     return QString("");
 }
 
-QString ContactAddresses::refetchModel()
+QString AccountAddresses::refetchModel()
 {
     beginResetModel();
 
@@ -153,14 +153,14 @@ QString ContactAddresses::refetchModel()
     //
     // Insert new objects
     //
-    if (contact_) contact_->refillAddresses();
+    if (account_) account_->refillAddresses();
 
     endResetModel();
 
     return QString("");
 }
 
-void ContactAddresses::clear()
+void AccountAddresses::clear()
 {
     //
     // Always delete objects
@@ -169,13 +169,13 @@ void ContactAddresses::clear()
     addresses_.clear();
 }
 
-QString ContactAddresses::removeAddress(int idx)
+QString AccountAddresses::removeAddress(int idx)
 {
     beginResetModel();
 
     if (idx < addresses_.size())
     {
-        delete (ContactAddress*)addresses_.at(idx);
+        delete (AccountAddress*)addresses_.at(idx);
         addresses_.removeAt(idx);
     }
 
@@ -184,7 +184,7 @@ QString ContactAddresses::removeAddress(int idx)
     return QString("");
 }
 
-bool ContactAddresses::contains(const QString& filter)
+bool AccountAddresses::contains(const QString& filter)
 {
     for(int lIdx = 0; lIdx < addresses_.size(); lIdx++)
     {
@@ -197,33 +197,34 @@ bool ContactAddresses::contains(const QString& filter)
 }
 
 //
-// Contact
+// Account
 //
-Contact::Contact(QObject *parent): QObject(parent)
+Account::Account(QObject *parent): QObject(parent)
 {
-    id_ = 0;
-    db_ = 0;
+    db_ = AccountDbFactory::get();
+    db_->link(this);
+
     customAvatar_ = false;
-    addresses_ = new ContactAddresses(this, parent);
-    contactInfoBacked_.loadFromString(L"{}");
+    addresses_ = new AccountAddresses(this, parent);
+    accountInfoBacked_.loadFromString(L"{}");
 }
 
-Contact::~Contact()
+Account::~Account()
 {
     delete addresses_;
 }
 
-void Contact::link(ContactsDb* db)
+void Account::open(QString secret)
 {
-    db_ = db;
+    db_->open(secret);
 }
 
-QString Contact::update()
+QString Account::update()
 {
     try
     {
         if (!db_) NULL_REFERENCE_EXCEPTION();
-        db_->update(this);
+        db_->update();
     }
     catch(wave::Exception const& ex)
     {
@@ -233,49 +234,54 @@ QString Contact::update()
     return QString();
 }
 
-Currency::Type Contact::primaryAddressType() const
+Currency::Type Account::primaryAddressType() const
 {
     for(int lIdx = 0; lIdx < addresses_->rowCount(); lIdx++)
     {
-        ContactAddress* lAddress = addresses_->getAddress(lIdx);
+        AccountAddress* lAddress = addresses_->getAddress(lIdx);
         if (lAddress->primary()) return lAddress->addressType();
     }
 
     return Currency::Unknown;
 }
 
-QString Contact::primaryAddressTypeStr() const
+QString Account::primaryAddressTypeStr() const
 {
     return QString::fromStdString(Currency::name(primaryAddressType()));
 }
 
-QString Contact::primaryAddress() const
+QString Account::primaryAddress() const
 {
     for(int lIdx = 0; lIdx < addresses_->rowCount(); lIdx++)
     {
-        ContactAddress* lAddress = addresses_->getAddress(lIdx);
+        AccountAddress* lAddress = addresses_->getAddress(lIdx);
         if (lAddress->primary()) return lAddress->address();
     }
 
     return QString("");
 }
 
-void Contact::refillAddresses()
+void Account::refillAddresses()
 {
-    const json::Value& lList = contactInfoBacked_[L"addresses"];
-    addresses_->fromJSON(const_cast<json::Value&>(lList));
+    json::Value lList;
+    if (accountInfoBacked_.find(L"addresses", lList))
+    {
+        addresses_->fromJSON(const_cast<json::Value&>(lList));
+    }
 }
 
-void Contact::revertChanges()
+void Account::revertChanges()
 {
-    if (!id_) return; // new
-
-    setName(contactInfoBacked_[L"name"].getQString());
-    setFullName(contactInfoBacked_[L"fullName"].getQString());
-    setAvatar(contactInfoBacked_[L"avatar"].getQString());
+    json::Value lName;
+    if (accountInfoBacked_.find(L"name", lName))
+    {
+        setName(accountInfoBacked_[L"name"].getQString());
+        setFullName(accountInfoBacked_[L"fullName"].getQString());
+        setAvatar(accountInfoBacked_[L"avatar"].getQString());
+    }
 }
 
-QString Contact::avatarSource() const
+QString Account::avatarSource() const
 {
     if (!customAvatar_)
     {
@@ -285,27 +291,26 @@ QString Contact::avatarSource() const
     }
     else
     {
-        QString lAvatarFile = ApplicationPath::assetUrlPath() + ApplicationPath::dataDirPath() + "/contacts/" + avatar_;
+        QString lAvatarFile = ApplicationPath::assetUrlPath() + ApplicationPath::dataDirPath() + "/account/" + avatar_;
         return lAvatarFile;
     }
 
     return "";
 }
 
-QString Contact::avatarSourceFolder() const
+QString Account::avatarSourceFolder() const
 {
-    return ApplicationPath::dataDirPath() + "/contacts/";
+    return ApplicationPath::dataDirPath() + "/account/";
 }
 
-void Contact::copyAvatar(QString fromUrl)
+void Account::copyAvatar(QString fromUrl)
 {
     QFile lFrom(QUrl(fromUrl).toLocalFile());
     lFrom.copy(avatarSourceFolder() + QFileInfo(fromUrl).fileName());
 }
 
-void Contact::fromJSON(json::Value& root)
+void Account::fromJSON(json::Value& root)
 {
-    setId(root[L"id"].getInt());
     setName(root[L"name"].getQString());
     setFullName(root[L"fullName"].getQString());
     setAvatar(root[L"avatar"].getQString());
@@ -318,13 +323,12 @@ void Contact::fromJSON(json::Value& root)
     const json::Value& lList = root[L"addresses"];
     addresses_->fromJSON(const_cast<json::Value&>(lList));
 
-    contactInfoBacked_.loadFromString(L"{}");
-    root.clone(contactInfoBacked_);
+    accountInfoBacked_.loadFromString(L"{}");
+    root.clone(accountInfoBacked_);
 }
 
-void Contact::toJSON(json::Value& root)
+void Account::toJSON(json::Value& root)
 {
-    root.addInt(L"id", id());
     root.addString(L"name", name().toStdWString());
     root.addString(L"fullName", fullName().toStdWString());
     root.addString(L"avatar", avatar().toStdWString());
@@ -333,6 +337,6 @@ void Contact::toJSON(json::Value& root)
     const json::Value& lList = root.addArray(L"addresses");
     if (addresses_) addresses_->toJSON(const_cast<json::Value&>(lList));
 
-    contactInfoBacked_.loadFromString(L"{}");
-    root.clone(contactInfoBacked_);
+    accountInfoBacked_.loadFromString(L"{}");
+    root.clone(accountInfoBacked_);
 }

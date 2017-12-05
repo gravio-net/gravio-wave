@@ -9,6 +9,7 @@ Contacts::Contacts(QObject *parent): QAbstractListModel(parent)
 {
     db_ = ContactsDbFactory::get();
 
+    // TODO: need to pass secret
     db_->open(QString(""));
     contacts_ = db_->selectAll();
 

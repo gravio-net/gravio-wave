@@ -13,6 +13,15 @@ ApplicationWindow
     visible: true
     title: "gravio-app v0.1"
 
+    //
+    // final constructon stasis
+    //
+    Component.onCompleted:
+    {
+        // need to pass secret
+        gravioAccount.open("");
+    }
+
     Settings
     {
         id: settings
@@ -70,7 +79,7 @@ ApplicationWindow
 
                     x: parent.width + 4.0
                     y: (parent.height - height) / 2.0
-                    source: stackView.getPrevIndex() == -1 ? "images/logo.png" : modulesModel.get(stackView.getPrevIndex()).iconTitleFile
+                    source: stackView.getPrevModuleName() == "(empty)" ? "images/logo.png" : modulesModel.get(stackView.getPrevModuleName()).iconTitleFile
                 }
             }
 
@@ -100,7 +109,7 @@ ApplicationWindow
 
         function adjust()
         {
-            backButtonImage.source = (stackView.getPrevIndex() == -1 ? "images/logo.png" : modulesModel.get(stackView.getPrevIndex()).iconTitleFile);
+            backButtonImage.source = (stackView.getPrevModuleName() == "(empty)" ? "images/logo.png" : modulesModel.get(stackView.getPrevModuleName()).iconTitleFile);
             actionBottomButton.visible = false;
         }
 
@@ -191,7 +200,20 @@ ApplicationWindow
 
                 onClicked:
                 {
-                    toolBar.actionActivated();
+                    if (!(stackView.depth > 1))
+                    {
+                        //
+                        // create dialog
+                        //
+
+                        var lComponent = Qt.createComponent("account.qml");
+                        var lDialog = lComponent.createObject(window);
+                        lDialog.openAccountDialog();
+                    }
+                    else
+                    {
+                        toolBar.actionActivated();
+                    }
                 }
             }
         }
@@ -265,7 +287,7 @@ ApplicationWindow
 
         property var list: []
 
-        function pushItem(moduleIndex, name, module)
+        function pushItem(name, module)
         {
             console.log("[StackView/pushItem]: depth(0) = " + stackView.depth);
 
@@ -275,7 +297,7 @@ ApplicationWindow
                 {
                     return item.moduleName == name;
                 },
-                StackView.ForceLoad
+                StackView.DontLoad // ForceLoad
             );
 
             console.log("[StackView/pushItem]: depth(1) = " + stackView.depth + ", module = " + lModule);
@@ -283,29 +305,45 @@ ApplicationWindow
             if (lModule == null)
             {
                 lModule = push(module);
-                list.push(moduleIndex);
+                list.push(name);
+            }
+            else
+            {
+                console.log("[StackView/pushItem/unwind]: depth(2) = " + stackView.depth + ", module = " + lModule);
+                this.pop(lModule, StackView.Transition);
+                list = [];
+
+                // refill index
+                for(var lIdx = 0; lIdx < this.depth; lIdx++)
+                {
+                    var lLoadedModule = this.get(lIdx, StackView.DontLoad);
+                    if (lLoadedModule != null)
+                    {
+                        list.push(lLoadedModule.moduleName);
+                    }
+                }
             }
 
-            console.log("[StackView/pushItem]: depth(2) = " + stackView.depth + ", module = " + lModule);
+            console.log("[StackView/pushItem]: depth(3) = " + stackView.depth + ", module = " + lModule);
             return lModule;
         }
 
-        function getPrevIndex()
+        function getPrevModuleName()
         {
             if (list.length > 1) { return list[list.length-2]; }
-            return -1;
+            return "(empty)";
         }
 
-        function getIndex()
+        function getModuleName()
         {
             if (list.length > 0) { return list[list.length-1]; }
-            return -1;
+            return "(empty)";
         }
 
         function popItem()
         {
             list.pop();
-            pop();
+            this.pop();
         }
 
         function activateModule(index, name, source)
@@ -318,9 +356,9 @@ ApplicationWindow
             // move to the new index
             listView.currentIndex = index;
             // try to load module (if already loaded - checked inside)
-            modulesModel.load(index);
+            modulesModel.load(name);
             // push new module
-            lModule = stackView.pushItem(index, name, source); // push to start *.qml
+            lModule = stackView.pushItem(name, source); // push to start *.qml
 
             // reset tool&footer bars
             footerBar.visible = true;
@@ -329,7 +367,7 @@ ApplicationWindow
             drawer.close();
 
             // activate new current module
-            lModule.moduleActivate(modulesModel.get(stackView.getIndex()));
+            lModule.moduleActivate(modulesModel.get(stackView.getModuleName()));
         }
 
         function deactivateModule()
@@ -340,7 +378,7 @@ ApplicationWindow
                 stackView.currentItem.moduleDeactivate();
 
                 stackView.popItem();
-                listView.currentIndex = stackView.getIndex();
+                listView.currentIndex = modulesModel.findIndex(stackView.getModuleName());
             }
 
             footerBar.visible = stackView.depth > 1;
@@ -350,7 +388,7 @@ ApplicationWindow
             console.log("[StackView/popItem]: depth = " + stackView.depth + ", module = " + stackView.currentItem);
 
             // re-activate new current module
-            stackView.currentItem.moduleActivate(modulesModel.get(stackView.getIndex()));
+            stackView.currentItem.moduleActivate(modulesModel.get(stackView.getModuleName()));
         }
 
         initialItem: GridLayout
@@ -416,6 +454,14 @@ ApplicationWindow
             // common module properties
             //
             property string moduleName;
+
+            //
+            // default page
+            //
+            Component.onCompleted:
+            {
+                moduleName = "(empty)";
+            }
         }
     }
 

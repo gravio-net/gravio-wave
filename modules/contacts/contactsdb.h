@@ -42,7 +42,7 @@ class ContactsJSONDb: public ContactsDb
 {
     Q_OBJECT
 public:
-    ContactsJSONDb() { identity_ = 0; /* by default */ }
+    ContactsJSONDb() { identity_ = 0; /* by default */ opened_ = false; }
     ~ContactsJSONDb() {}
 
     void open(QString);
@@ -65,6 +65,7 @@ private:
     QMap<int, Contact*> cache_;
     QMap<QString, int> nameIndex_;
     int identity_;
+    bool opened_;
 };
 
 /**

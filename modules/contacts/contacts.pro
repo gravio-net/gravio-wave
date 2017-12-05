@@ -42,4 +42,5 @@ HEADERS += \
 
 DISTFILES += \
     contacts_ui.qml \
-    filedialog.qml
+    filedialog.qml \
+    cameraview.qml

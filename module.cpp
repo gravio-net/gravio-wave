@@ -342,6 +342,22 @@ QHash<int, QByteArray> ModulesModel::roleNames() const
     return lRoles;
 }
 
+ModuleWrapper* ModulesModel::find(QString& name)
+{
+    int lIdx = findIndex(name);
+    if (lIdx < 0) return 0;
+
+    return (ModuleWrapper*)&modules_.at(lIdx);
+}
+
+int ModulesModel::findIndex(QString name)
+{
+    QMap<QString, int>::iterator lIterator = index_.find(name);
+    if (lIterator == index_.end()) return -1;
+
+    return lIterator.value();
+}
+
 QVariantMap ModulesModel::get(int row)
 {
     if (row < modules_.size())
@@ -363,6 +379,29 @@ QVariantMap ModulesModel::get(int row)
     return QVariantMap();
 }
 
+QVariantMap ModulesModel::get(QString name)
+{
+    int lRow = findIndex(name);
+
+    if (lRow < modules_.size())
+    {
+        QHash<int,QByteArray> lNames = roleNames();
+        QHashIterator<int, QByteArray> lIterator(lNames);
+        QVariantMap lRes;
+        while (lIterator.hasNext())
+        {
+            lIterator.next();
+            QModelIndex lIdx = index(lRow, 0);
+            QVariant lData = lIdx.data(lIterator.key());
+            lRes[lIterator.value()] = lData;
+        }
+
+        return lRes;
+    }
+
+    return QVariantMap();
+}
+
 void ModulesModel::load(int index)
 {
     if (index < modules_.size())
@@ -371,12 +410,22 @@ void ModulesModel::load(int index)
     }
 }
 
+void ModulesModel::load(QString name)
+{
+    ModuleWrapper* lWrapper = find(name);
+
+    if (lWrapper)
+    {
+        lWrapper->load();
+    }
+}
+
 const ModuleWrapper& ModulesModel::addModule(const ModuleWrapper& module)
 {
-    if (index_.find(module.name().toStdString()) == index_.end())
+    if (index_.find(module.name()) == index_.end())
     {
         modules_.append(module);
-        index_.insert(module.name().toStdString());
+        index_.insert(module.name(), modules_.length()-1);
 
         return modules_.at(modules_.length()-1); // return last one
     }

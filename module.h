@@ -146,13 +146,19 @@ public:
     QHash<int, QByteArray> roleNames() const;
 
     Q_INVOKABLE QVariantMap get(int index);
+    Q_INVOKABLE QVariantMap get(QString name);
     Q_INVOKABLE void load(int index);
+    Q_INVOKABLE void load(QString name);
+    Q_INVOKABLE int findIndex(QString name);
 
     const ModuleWrapper& addModule(const ModuleWrapper&);
 
 private:
+    ModuleWrapper* find(QString& name);
+
+private:
     QList<ModuleWrapper> modules_;
-    std::set<std::string> index_;
+    QMap<QString, int> index_;
 };
 
 } // wave

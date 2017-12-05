@@ -1,4 +1,5 @@
-QT += qml quick quickcontrols2
+android: QT += qml quick quickcontrols2 androidextras
+else: QT += qml quick quickcontrols2
 
 CONFIG += plugin c++11
 
@@ -6,7 +7,28 @@ SOURCES += main.cpp \
     logger.cpp \
     application.cpp \
     json.cpp \
-    module.cpp
+    module.cpp \
+    account.cpp \
+    accountdb.cpp \
+    wallet/walletstore.cpp \
+    wallet/crypto/ctaes/ctaes.c \
+    wallet/crypto/sha256.cpp \
+    wallet/crypto/sha512.cpp \
+    wallet/crypto/aes.cpp \
+    wallet/secp256k1/src/secp256k1.c \
+    wallet/key.cpp \
+    wallet/context.cpp \
+    wallet/cryptoaddress.cpp \
+    wallet/crypto/ripemd160.cpp \
+    wallet/hash.cpp \
+    wallet/sync.cpp \
+    wallet/support/cleanse.cpp \
+    wallet/transactionstore.cpp \
+    wallet/script/script.cpp \
+    wallet/utilstrencodings.cpp \
+    wallet/primitives/transaction.cpp \
+    wallet/amount.cpp \
+    wallet/uint256.cpp
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH =
@@ -35,7 +57,8 @@ DISTFILES += \
     gravio-app.config \
     qtquickcontrols2.conf \
     modules/modules.config \
-    android/AndroidManifest.xml
+    android/AndroidManifest.xml \
+    qml/account.qml
 
 HEADERS += \
     logger.h \
@@ -43,7 +66,32 @@ HEADERS += \
     module.h \
     json.h \
     exception.h \
-    currency.h
+    currency.h \
+    account.h \
+    accountdb.h \
+    wallet/uint256.h \
+    wallet/walletstore.h \
+    wallet/compat/byteswap.h \
+    wallet/compat/endian.h \
+    wallet/crypto/ctaes/ctaes.h \
+    wallet/crypto/aes.h \
+    wallet/crypto/common.h \
+    wallet/crypto/sha256.h \
+    wallet/crypto/sha512.h \
+    wallet/key.h \
+    wallet/context.h \
+    wallet/cryptoaddress.h \
+    wallet/hash.h \
+    wallet/crypto/ripemd160.h \
+    wallet/sync.h \
+    wallet/datastream.h \
+    wallet/support/cleanse.h \
+    wallet/transactionstore.h \
+    wallet/script/script.h \
+    wallet/utilstrencodings.h \
+    wallet/primitives/transaction.h \
+    wallet/amount.h \
+    wallet/version.h
 
 RESOURCES += \
     qtquickcontrols2.conf
@@ -51,3 +99,11 @@ RESOURCES += \
 dep_root.files += android/*
 dep_root.path = /assets
 INSTALLS += dep_root
+
+INCLUDEPATH += openssl/include
+
+contains(ANDROID_TARGET_ARCH,armeabi-v7a) {
+    ANDROID_EXTRA_LIBS = \
+        $$PWD/openssl/bin/libcrypto.so \
+        $$PWD/openssl/bin/libssl.so
+}

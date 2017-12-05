@@ -7,325 +7,14 @@ import QtGraphicalEffects 1.0
 import Qt.labs.folderlistmodel 2.1
 import QtMultimedia 5.8
 
-import net.gravio.wave.modules.contacts 1.0
+import net.gravio.wave.account 1.0
 
-Page
+Item
 {
-    id: page
-
-    Rectangle
+    // methods
+    function openAccountDialog()
     {
-        id: searchBar
-        Layout.alignment: Qt.AlignTop
-        height: actionClearFilterButton.height
-
-        RowLayout
-        {
-            id: searchRow
-            anchors.fill: parent
-            spacing: 1
-
-            Rectangle
-            {
-                id: searchFieldContainer
-                color: "transparent"
-
-                height: actionClearFilterButton.height
-                width: page.width - actionClearFilterButton.width - actionApplyFilterButton.width
-                Layout.leftMargin: 10
-
-                TextField
-                {
-                    id: searchField
-
-                    placeholderText: "Enter search text"
-                    width: searchFieldContainer.width
-
-                    onEditingFinished:
-                    {
-                        contactsModel.applyFilter(searchField.text);
-                    }
-                }
-
-                ToolButton
-                {
-                    id: actionApplyFilterButton
-                    x: getX()
-
-                    function getX()
-                    {
-                        var lX = searchFieldContainer.width + searchRow.spacing + searchFieldContainer.Layout.leftMargin;
-                        return lX;
-                    }
-
-                    contentItem: Image
-                    {
-                        id: actionApplyFilterImage
-
-                        fillMode: Image.Pad
-                        horizontalAlignment: Image.AlignHCenter
-                        verticalAlignment: Image.AlignVCenter
-                        source: "../../images/black/apply.png"
-                    }
-
-                    onClicked:
-                    {
-                        contactsModel.applyFilter(searchField.text);
-                    }
-                }
-                ToolButton
-                {
-                    id: actionClearFilterButton
-                    x: getX()
-
-                    function getX()
-                    {
-                        var lX = actionApplyFilterButton.x + actionApplyFilterButton.width - 10//searchFieldContainer.width + searchRow.spacing + searchFieldContainer.Layout.leftMargin + actionApplyFilterButton.width;
-                        return lX;
-                    }
-
-                    contentItem: Image
-                    {
-                        id: actionClearSearchImage
-
-                        fillMode: Image.Pad
-                        horizontalAlignment: Image.AlignHCenter
-                        verticalAlignment: Image.AlignVCenter
-                        source: "../../images/black/remove.png"
-                    }
-
-                    onClicked:
-                    {
-                        searchField.text = "";
-                        contactsModel.resetFilter();
-                    }
-                }
-
-            }
-        }
-
-        function getHeight()
-        {
-            return actionClearFilterButton.height;
-        }
-
-        function getWidth()
-        {
-            return page.width;
-        }
-    }
-
-    Rectangle
-    {
-        id: listBar
-        y: searchBar.getHeight()
-        width: searchBar.getWidth()
-        height: page.height - searchBar.getHeight()
-        color: "transparent"
-
-        ListView
-        {
-            id: contactsView
-            model: contactsModel
-
-            focus: true
-            currentIndex: -1
-            anchors.fill: listBar
-
-            delegate: SwipeDelegate
-            {
-                id: delegateContact
-                clip: true
-                width: parent.width
-
-                highlighted: ListView.isCurrentItem
-                height: avatarImage.height + 10.0
-
-                contentItem: Row
-                {
-                    Rectangle
-                    {
-                        x: -10
-                        y: -3
-                        Image
-                        {
-                            id: avatarImage
-                            property bool rounded: true
-                            property bool adapt: true
-
-                            //mipmap: true // smoothing
-
-                            width: 48
-                            height: 48
-                            fillMode: Image.PreserveAspectCrop
-
-                            source: avatarSource
-
-                            layer.enabled: rounded
-                            layer.effect: OpacityMask
-                            {
-                                maskSource: Item
-                                {
-                                    width: avatarImage.width
-                                    height: avatarImage.height
-                                    Rectangle
-                                    {
-                                        anchors.centerIn: parent
-                                        width: avatarImage.adapt ? avatarImage.width : Math.min(avatarImage.width, avatarImage.height)
-                                        height: avatarImage.adapt ? avatarImage.height : width
-                                        radius: Math.min(width, height)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    Label
-                    {
-                        leftPadding: avatarImage.width
-                        text: name + (fullName == "" ? "" : " (" + fullName + ")")
-                        width: addressHeader.width
-                        height: 20
-                    }
-                    Rectangle
-                    {
-                        id: addressPrimaryTypeInfo
-                        color: "yellow"
-                        Image
-                        {
-                            id: currencyPrimaryIcon
-                            x: avatarImage.width + 3
-                            y: 22
-                            width: 18
-                            height: 18
-                            mipmap: true
-                            fillMode: Image.PreserveAspectFit
-                            source: "../../images/black/" + primaryAddressType + ".png"
-                        }
-                        Label
-                        {
-                            x: avatarImage.width + currencyPrimaryIcon.width - 12
-                            y: 22
-                            color: "grey"
-                            leftPadding: currencyPrimaryIcon.width
-                            text: primaryAddress
-                            width: addressHeader.width - avatarImage.width + currencyPrimaryIcon.width
-                            height: 20
-                        }
-
-                        Component.onCompleted:
-                        {
-                        }
-                    }
-                }
-
-                onClicked:
-                {
-                    contactsView.currentIndex = index;
-                    contactDialog.editContact(contactsModel.get(index));
-                }
-
-                swipe.right: Rectangle
-                {
-                    id: swipeContactRect
-                    width: parent.height*2
-                    anchors.right: parent.right
-                    height: parent.height
-
-                    Rectangle
-                    {
-                        id: removeContactRect
-                        color: swipeContactRect.SwipeDelegate.pressed ? Qt.darker("tomato", 1.1) : "tomato"
-                        height: swipeContactRect.height
-                        anchors.left: swipeContactRect.left
-                        width: parent.height
-
-                        Image
-                        {
-                            id: removeContactImage
-                            x: removeContactRect.width / 2 - removeContactImage.width / 2
-                            y: removeContactRect.height / 2 - removeContactImage.height / 2
-                            source: "../../images/white/remove.png"
-                        }
-
-                        MouseArea
-                        {
-                            anchors.fill: removeContactRect
-                            onClicked:
-                            {
-                                contactsModel.removeContact(index);
-                            }
-                        }
-                    }
-                    Rectangle
-                    {
-                        id: cancelContactRect
-                        color: swipeContactRect.SwipeDelegate.pressed ? Qt.darker("orange", 1.1) : "orange"
-                        height: swipeContactRect.height
-                        anchors.right: swipeContactRect.right
-                        width: parent.height
-
-                        Image
-                        {
-                            id: cancelContactImage
-                            x: cancelContactRect.width / 2 - cancelContactImage.width / 2
-                            y: cancelContactRect.height / 2 - cancelContactImage.height / 2
-                            source: "../../images/white/back_right.png"
-                        }
-
-                        MouseArea
-                        {
-                            anchors.fill: cancelContactRect
-                            onClicked:
-                            {
-                                delegateContact.swipe.close();
-                            }
-                        }
-                    }
-                }
-            }
-
-            Component.onCompleted:
-            {
-            }
-
-            ScrollIndicator.vertical: ScrollIndicator {}
-        }
-    }
-
-    //
-    // common module methods
-    //
-    function moduleDeactivate()
-    {
-        console.log("[Contacts/moduleDeactivate]: fired");
-        toolBar.actionActivated.disconnect(addContact);
-    }
-
-    function moduleActivate(moduleInfo)
-    {
-        console.log("[Contacts/moduleActivate]: fired");
-
-        moduleName = moduleInfo.name;
-        module = moduleInfo;
-
-        toolBar.actionActivated.connect(addContact);
-        toolBar.setActionImage(moduleInfo.assetPrefix + moduleInfo.modulePath + "add.png");
-    }
-
-    //
-    // common module properties
-    //
-    property int moduleIndex;
-    property string moduleName;
-    property variant module;
-
-    //
-    // private methods
-    //
-    function addContact()
-    {
-        console.log("[Contacts/addContact]: fired");
-        contactDialog.addContact(contactsModel.newContact());
+        accountDialog.edit();
     }
 
     //
@@ -339,28 +28,28 @@ Page
         focus: true
         title: "Add address"
 
-        x: 5
+        x: 10
         y: 10
-        width: window.width - 30
-        contentHeight: addressColumn.height
+        width: window.width - 20
+        height: window.height - 20
 
-        property ContactAddress contactAddress;
-        property ContactAddresses addresses;
+        property AccountAddress accountAddress;
+        property AccountAddresses addresses;
 
         standardButtons: Dialog.Ok | Dialog.Cancel
         onAccepted:
         {
             var lError = "";
-            if (addressDialog.contactAddress == null /*add new address*/)
+            if (addressDialog.accountAddress == null /*add new address*/)
             {
                 lError = addressDialog.addresses.addAddress(addressTypeCombo.currentText, addressEdit.text, labelEdit.text, primaryEdit.checked);
             }
             else
             {
-                addressDialog.contactAddress.addressTypeStr = addressTypeCombo.currentText;
-                addressDialog.contactAddress.address = addressEdit.text;
-                addressDialog.contactAddress.label = labelEdit.text;
-                addressDialog.contactAddress.primary = primaryEdit.checked;
+                addressDialog.accountAddress.addressTypeStr = addressTypeCombo.currentText;
+                addressDialog.accountAddress.address = addressEdit.text;
+                addressDialog.accountAddress.label = labelEdit.text;
+                addressDialog.accountAddress.primary = primaryEdit.checked;
 
                 addressDialog.addresses.updateModel();
             }
@@ -377,15 +66,15 @@ Page
         function newAddress(addresses)
         {
             addressDialog.title = "Add address";
-            addressDialog.contactAddress = null;
+            addressDialog.accountAddress = null;
             addressDialog.addresses = addresses;
             addressDialog.open();
         }
 
-        function editAddress(contactAddress, addresses)
+        function editAddress(accountAddress, addresses)
         {
             addressDialog.title = "Edit address";
-            addressDialog.contactAddress = contactAddress;
+            addressDialog.accountAddress = accountAddress;
             addressDialog.addresses = addresses;
             addressDialog.open();
         }
@@ -423,9 +112,9 @@ Page
 
                     function getIndex()
                     {
-                        if(addressDialog.contactAddress == null) return -1;
+                        if(addressDialog.accountAddress == null) return -1;
 
-                        switch(addressDialog.contactAddress.addressTypeStr)
+                        switch(addressDialog.accountAddress.addressTypeStr)
                         {
                             case "GIO": return 0;
                             case "BTC": return 1;
@@ -441,7 +130,7 @@ Page
                 TextField
                 {
                     id: addressEdit
-                    text: (addressDialog.contactAddress != null) ? addressDialog.contactAddress.address : ""
+                    text: (addressDialog.accountAddress != null) ? addressDialog.accountAddress.address : ""
                     placeholderText: "Enter address"
                     width: addressDialog.width - 50
                     font.pixelSize: 14
@@ -452,7 +141,7 @@ Page
                 TextField
                 {
                     id: labelEdit
-                    text: (addressDialog.contactAddress != null) ? addressDialog.contactAddress.label : ""
+                    text: (addressDialog.accountAddress != null) ? addressDialog.accountAddress.label : ""
                     placeholderText: "Enter label"
                     width: addressDialog.width - 50
                     font.pixelSize: 14
@@ -464,7 +153,7 @@ Page
                 {
                     id: primaryEdit
                     text: "Primary"
-                    checked: (addressDialog.contactAddress != null) ? addressDialog.contactAddress.primary : false
+                    checked: (addressDialog.accountAddress != null) ? addressDialog.accountAddress.primary : false
                     font.pixelSize: 14
                 }
             }
@@ -472,81 +161,60 @@ Page
     }
 
     //
-    // AddContact/ModifyContact dialog
+    // Modify account settings dialog
     //
     Dialog
     {
-        id: contactDialog
+        id: accountDialog
         modal: true
         focus: true
-        title: "Add contact"
-        x: 5
+        title: "Account settings"
+        x: 10
         y: 10
-        width: window.width - 30
-        height: window.height - 100
-
-        property Contact contact;
+        width: window.width - 20
+        height: window.height - 20
 
         standardButtons: Dialog.Ok | Dialog.Cancel
         onAccepted:
         {
-            contact.name = nameEdit.text;
-            contact.fullName = fullNameEdit.text;
+            gravioAccount.name = nameEdit.text;
+            gravioAccount.fullName = fullNameEdit.text;
 
-            var lError = contact.update();
+            var lError = gravioAccount.update();
             if (lError != "") errorDialog.show(lError);
 
-            contactDialog.close();
+            accountDialog.close();
         }
         onRejected:
         {
-            if (!contact.isNew())
-            {
-                contact.addresses.refetchModel();
-                contact.revertChanges();
-            }
+            gravioAccount.addresses.refetchModel();
+            gravioAccount.revertChanges();
 
-            contactDialog.close();
+            accountDialog.close();
         }
 
-        function editContact(other)
+        function edit()
         {
-            contactDialog.title = "Edit contact";
-            contactDialog.contact = other;
+            accountAvatarImage.mipmap = gravioAccount.avatar == "" ? true : false;
+            accountAvatarImage.source = gravioAccount.avatar == "" ? "images/black/photo_frame2.png" : gravioAccount.avatarSource();
+            addressesView.model = gravioAccount.addresses;
+            accountSwipeView.currentIndex = 0;
 
-            contactAvatarImage.mipmap = false;
-            contactAvatarImage.source = contactDialog.contact.avatarSource();
-            addressesView.model = contactDialog.contact.addresses;
-            contactSwipeView.currentIndex = 0;
-
-            contactDialog.open();
-        }
-
-        function addContact(other)
-        {
-            contactDialog.title = "Add contact";
-            contactDialog.contact = other;
-
-            contactAvatarImage.mipmap = true;
-            contactAvatarImage.source = "../../images/black/photo_frame2.png";
-            addressesView.model = contactDialog.contact.addresses;
-            contactSwipeView.currentIndex = 0;
-
-            contactDialog.open();
+            accountDialog.open();
         }
 
         Rectangle
         {
-            id: contactDialogPage
+            id: accountDialogPage
             anchors.fill: parent
             clip: true
             color: "white"
 
             SwipeView
             {
-                id: contactSwipeView
+                id: accountSwipeView
 
-                anchors.fill: contactDialogPage
+                anchors.fill: accountDialogPage
                 currentIndex: 0
 
                 Page
@@ -558,7 +226,7 @@ Page
 
                         Column
                         {
-                            id: contactColumn
+                            id: accountColumn
                             spacing: 10
 
                             Row
@@ -566,13 +234,13 @@ Page
                                 Rectangle
                                 {
                                     id: avatarBar
-                                    width: contactDialog.width - 40
+                                    width: accountDialog.width - 40
                                     height: 140
 
                                     ToolButton
                                     {
                                         id: takePhotoButton
-                                        x: avatarBar.width / 2 - contactAvatarImage.width / 2 - (takePhotoButton.width + 5)
+                                        x: avatarBar.width / 2 - accountAvatarImage.width / 2 - (takePhotoButton.width + 5)
                                         y: 8
                                         contentItem: Image
                                         {
@@ -580,7 +248,7 @@ Page
                                             fillMode: Image.Pad
                                             horizontalAlignment: Image.AlignHCenter
                                             verticalAlignment: Image.AlignVCenter
-                                            source: "../../images/black/camera.png"
+                                            source: "images/black/camera.png"
                                         }
 
                                         onClicked:
@@ -588,8 +256,8 @@ Page
                                             if (camera.cameraState() != Camera.ActiveState)
                                             {
                                                 camera.start();
-                                                contactAvatarImage.mipmap = true;
-                                                contactAvatarImage.source = "../../images/black/photo_frame2.png";
+                                                accountAvatarImage.mipmap = true;
+                                                accountAvatarImage.source = "images/black/photo_frame2.png";
                                                 cancelPhotoButton.visible = true;
                                             }
                                             else if (camera.cameraState() == Camera.ActiveState) // take a shot
@@ -602,7 +270,7 @@ Page
                                     ToolButton
                                     {
                                         id: cancelPhotoButton
-                                        x: avatarBar.width / 2 - contactAvatarImage.width / 2 - (takePhotoButton.width + 5)
+                                        x: avatarBar.width / 2 - accountAvatarImage.width / 2 - (takePhotoButton.width + 5)
                                         y: avatarBar.height - 55
                                         contentItem: Image
                                         {
@@ -610,7 +278,7 @@ Page
                                             fillMode: Image.Pad
                                             horizontalAlignment: Image.AlignHCenter
                                             verticalAlignment: Image.AlignVCenter
-                                            source: "../../images/black/cancel.png"
+                                            source: "images/black/cancel.png"
                                         }
 
                                         onClicked:
@@ -620,8 +288,8 @@ Page
                                             if (camera.cameraState() == Camera.ActiveState)
                                             {
                                                 camera.stop();
-                                                contactAvatarImage.mipmap = false;
-                                                contactAvatarImage.source = contactDialog.contact.avatarSource();
+                                                accountAvatarImage.mipmap = false;
+                                                accountAvatarImage.source = gravioAccount.avatarSource();
                                             }
                                         }
 
@@ -633,7 +301,7 @@ Page
 
                                     Image
                                     {
-                                        id: contactAvatarImage
+                                        id: accountAvatarImage
 
                                         property bool rounded: true
                                         property bool adapt: true
@@ -643,9 +311,9 @@ Page
                                         Rectangle
                                         {
                                             id: imageContainer
-                                            x: (-1 * contactAvatarImage.width/2) //avatarBar.width / 2 - contactAvatarImage.width
-                                            y: -80 //-80
-                                            width: contactAvatarImage.width * 2
+                                            x: (-1 * accountAvatarImage.width/2)
+                                            y: -80
+                                            width: accountAvatarImage.width * 2
                                             height: avatarBar.height * 2
                                             color: "transparent"
 
@@ -666,7 +334,7 @@ Page
                                                     // TODO: create camera
                                                     if(inner === undefined)
                                                     {
-                                                        var lComponent = Qt.createComponent("cameraview.qml");
+                                                        var lComponent = Qt.createComponent("modules/contacts/cameraview.qml");
                                                         inner = lComponent.createObject(imageContainer);
                                                         inner.setup(camera);
                                                     }
@@ -692,34 +360,34 @@ Page
                                                 }
                                                 function applyPicture(path)
                                                 {
-                                                    contactAvatarImage.mipmap = false;
-                                                    contactDialog.contact.customAvatar = true;
-                                                    contactDialog.contact.avatar = appHelper.fileNameFromPath(path);
-                                                    contactAvatarImage.source = contactDialog.contact.avatarSource();
+                                                    accountAvatarImage.mipmap = false;
+                                                    gravioAccount.customAvatar = true;
+                                                    gravioAccount.avatar = appHelper.fileNameFromPath(path);
+                                                    accountAvatarImage.source = gravioAccount.avatarSource();
                                                 }
                                            }
                                         }
 
-                                        x: avatarBar.width / 2 - contactAvatarImage.width / 2
+                                        x: avatarBar.width / 2 - accountAvatarImage.width / 2
                                         width: 128
                                         height: 128
                                         fillMode: Image.PreserveAspectCrop
 
-                                        source: contactDialog.contact.avatarSource()
+                                        source: gravioAccount.avatarSource()
 
                                         layer.enabled: rounded
                                         layer.effect: OpacityMask
                                         {
                                             maskSource: Item
                                             {
-                                                width: contactAvatarImage.width
-                                                height: contactAvatarImage.height
+                                                width: accountAvatarImage.width
+                                                height: accountAvatarImage.height
 
                                                 Rectangle
                                                 {
                                                     anchors.centerIn: parent
-                                                    width: contactAvatarImage.adapt ? contactAvatarImage.width : Math.min(contactAvatarImage.width, contactAvatarImage.height)
-                                                    height: contactAvatarImage.adapt ? contactAvatarImage.height : width
+                                                    width: accountAvatarImage.adapt ? accountAvatarImage.width : Math.min(accountAvatarImage.width, accountAvatarImage.height)
+                                                    height: accountAvatarImage.adapt ? accountAvatarImage.height : width
                                                     radius: Math.min(width, height)
                                                 }
                                             }
@@ -754,7 +422,7 @@ Page
                                     ToolButton
                                     {
                                         id: nextAvatarButton
-                                        x: avatarBar.width / 2 + contactAvatarImage.width / 2 + 5.0
+                                        x: avatarBar.width / 2 + accountAvatarImage.width / 2 + 5.0
                                         y: 8
                                         contentItem: Image
                                         {
@@ -762,21 +430,21 @@ Page
                                             fillMode: Image.Pad
                                             horizontalAlignment: Image.AlignHCenter
                                             verticalAlignment: Image.AlignVCenter
-                                            source: "../../images/black/chevron.png"
+                                            source: "images/black/chevron.png"
                                         }
 
                                         onClicked:
                                         {
-                                            contactDialog.contact.customAvatar = false;
-                                            contactDialog.contact.avatar = avatarsListModel.getNext();
-                                            contactAvatarImage.mipmap = false;
-                                            contactAvatarImage.source = contactDialog.contact.avatarSource();
+                                            gravioAccount.customAvatar = false;
+                                            gravioAccount.avatar = avatarsListModel.getNext();
+                                            accountAvatarImage.mipmap = false;
+                                            accountAvatarImage.source = gravioAccount.avatarSource();
                                         }
                                     }
                                     ToolButton
                                     {
                                         id: chooseAvatarButton
-                                        x: avatarBar.width / 2 + contactAvatarImage.width / 2 + 5.0
+                                        x: avatarBar.width / 2 + accountAvatarImage.width / 2 + 5.0
                                         y: avatarBar.height - 55
                                         contentItem: Image
                                         {
@@ -784,12 +452,12 @@ Page
                                             fillMode: Image.Pad
                                             horizontalAlignment: Image.AlignHCenter
                                             verticalAlignment: Image.AlignVCenter
-                                            source: "../../images/black/open.png"
+                                            source: "images/black/open.png"
                                         }
 
                                         onClicked:
                                         {
-                                            var lComponent = Qt.createComponent("filedialog.qml");
+                                            var lComponent = Qt.createComponent("modules/contacts/filedialog.qml");
                                             var lFileDialog = lComponent.createObject(page);
 
                                             lFileDialog.selectPicture(chooseAvatarButton);
@@ -799,13 +467,13 @@ Page
                                         {
                                             console.log(url);
 
-                                            contactAvatarImage.mipmap = false;
-                                            contactDialog.contact.customAvatar = true;
+                                            accountAvatarImage.mipmap = false;
+                                            gravioAccount.customAvatar = true;
 
-                                            contactDialog.contact.copyAvatar(url);
+                                            gravioAccount.copyAvatar(url);
                                             console.log(appHelper.fileNameFromPath(url));
-                                            contactDialog.contact.avatar = appHelper.fileNameFromPath(url);
-                                            contactAvatarImage.source = contactDialog.contact.avatarSource();
+                                            gravioAccount.avatar = appHelper.fileNameFromPath(url);
+                                            accountAvatarImage.source = gravioAccount.avatarSource();
                                         }
                                     }
                                 }
@@ -815,9 +483,9 @@ Page
                                 TextField
                                 {
                                     id: nameEdit
-                                    text: contactDialog.contact.name
+                                    text: gravioAccount.name
                                     placeholderText: "Enter name"
-                                    width: contactDialog.width - 50
+                                    width: accountDialog.width - 50
                                 }
                             }
                             Row
@@ -825,9 +493,9 @@ Page
                                 TextField
                                 {
                                     id: fullNameEdit
-                                    text: contactDialog.contact.fullName
+                                    text: gravioAccount.fullName
                                     placeholderText: "Enter full name"
-                                    width: contactDialog.width - 50
+                                    width: accountDialog.width - 50
                                 }
                             }
                         }
@@ -842,7 +510,7 @@ Page
 
                         Column
                         {
-                            id: contactAddressesColumn
+                            id: accountAddressesColumn
                             spacing: 10
 
                             Row
@@ -861,7 +529,7 @@ Page
                                 x: -5
                                 ToolSeparator
                                 {
-                                    width: contactDialog.width - 40
+                                    width: accountDialog.width - 40
                                     orientation: Qt.Horizontal
                                 }
                             }
@@ -881,7 +549,7 @@ Page
                                     {
                                         id: addressHeader
                                         color: "#3E9AFF"
-                                        width: (contactDialog.width - 55) - addressTypeHeader.width
+                                        width: (accountDialog.width - 55) - addressTypeHeader.width
                                         height: 40
 
                                         Label
@@ -905,12 +573,12 @@ Page
                                                 fillMode: Image.Pad
                                                 horizontalAlignment: Image.AlignHCenter
                                                 verticalAlignment: Image.AlignVCenter
-                                                source: "add_white.png"
+                                                source: "modules/contacts/add_white.png"
                                             }
 
                                             onClicked:
                                             {
-                                                addressDialog.newAddress(contactDialog.contact.addresses);
+                                                addressDialog.newAddress(gravioAccount.addresses);
                                             }
                                         }
                                     }
@@ -922,8 +590,8 @@ Page
                                 {
                                     id: addressesViewBar
                                     y: -5
-                                    width: contactDialog.width - 50
-                                    height: contactDialog.height - 305
+                                    width: accountDialog.width - 50
+                                    height: accountDialog.height - 305
 
                                     ListView
                                     {
@@ -937,6 +605,7 @@ Page
                                         {
                                             id: delegate
                                             clip: true
+                                            height: currencyIcon.height + 30.0
 
                                             contentItem: Row
                                             {
@@ -945,6 +614,7 @@ Page
                                                     id: addressTypeInfo
                                                     x: -10
                                                     y: 2
+
                                                     Image
                                                     {
                                                         id: currencyIcon
@@ -952,7 +622,7 @@ Page
                                                         height: 22
                                                         mipmap: true
                                                         fillMode: Image.PreserveAspectFit
-                                                        source: "../../images/black/" + addressType + ".png"
+                                                        source: "images/black/" + addressType + ".png"
                                                     }
                                                 }
                                                 Rectangle
@@ -994,7 +664,7 @@ Page
                                                         height: 13
                                                         mipmap: true
                                                         fillMode: Image.PreserveAspectFit
-                                                        source: primary ? "../../images/black/apply.png" : ""
+                                                        source: primary ? "images/black/apply.png" : ""
                                                     }
                                                 }
                                             }
@@ -1022,7 +692,7 @@ Page
                                                         id: removeImage
                                                         x: removeRect.width / 2 - removeImage.width / 2
                                                         y: removeRect.height / 2 - removeImage.height / 2
-                                                        source: "../../images/white/remove.png"
+                                                        source: "images/white/remove.png"
                                                     }
 
                                                     MouseArea
@@ -1030,7 +700,7 @@ Page
                                                         anchors.fill: removeRect
                                                         onClicked:
                                                         {
-                                                            contactDialog.contact.addresses.removeAddress(index);
+                                                            gravioAccount.addresses.removeAddress(index);
                                                         }
                                                     }
                                                 }
@@ -1047,7 +717,7 @@ Page
                                                         id: cancelImage
                                                         x: cancelRect.width / 2 - cancelImage.width / 2
                                                         y: cancelRect.height / 2 - cancelImage.height / 2
-                                                        source: "../../images/white/back_right.png"
+                                                        source: "images/white/back_right.png"
                                                     }
 
                                                     MouseArea
@@ -1063,11 +733,11 @@ Page
                                             onClicked:
                                             {
                                                 addressesView.currentIndex = index;
-                                                addressDialog.editAddress(contactDialog.contact.addresses.get(index), contactDialog.contact.addresses);
+                                                addressDialog.editAddress(gravioAccount.addresses.get(index), gravioAccount.addresses);
                                             }
                                         }
 
-                                        model: contactDialog.contact.addresses
+                                        model: gravioAccount.addresses
 
                                         remove: Transition
                                         {
@@ -1100,11 +770,11 @@ Page
         {
             id: indicator
 
-            count: contactSwipeView.count
-            currentIndex: contactSwipeView.currentIndex
+            count: accountSwipeView.count
+            currentIndex: accountSwipeView.currentIndex
 
-            anchors.bottom: contactDialogPage.bottom
-            anchors.horizontalCenter: contactDialogPage.horizontalCenter
+            anchors.bottom: accountDialogPage.bottom
+            anchors.horizontalCenter: accountDialogPage.horizontalCenter
         }
     }
 }

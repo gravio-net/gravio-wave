@@ -60,6 +60,8 @@ QString ContactsJSONDb::getFile()
 
 void ContactsJSONDb::open(QString /*secret*/)
 {
+    if (opened_) return;
+
     QString lDbFile = getFile();
 
     //
@@ -86,6 +88,8 @@ void ContactsJSONDb::open(QString /*secret*/)
             }
         }
     }
+
+    opened_ = true;
 }
 
 void ContactsJSONDb::pushItem(Contact* item)
@@ -175,6 +179,10 @@ QList<Contact*> ContactsJSONDb::select(const QString& filter)
 
 void ContactsJSONDb::saveAll()
 {
+    //
+    // TODO: AES encryption using 'secret'
+    //
+
     json::Document lDb;
     lDb.loadFromString("{}");
 

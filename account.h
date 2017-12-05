@@ -1,25 +1,26 @@
-#ifndef CONTACT_H
-#define CONTACT_H
+#ifndef ACCOUNT_H
+#define ACCOUNT_H
 
 #include <QString>
 #include <QList>
 #include <QAbstractListModel>
 #include <QQuickItem>
+#include <QMap>
 
-#include "../../currency.h"
-#include "../../json.h"
+#include "currency.h"
+#include "json.h"
 
 namespace gravio {
 namespace wave {
 
 // forward declaration
-class Contact;
+class Account;
 
 /**
- * @brief The ContactAddress class
- * Represents contact address information
+ * @brief The AccountAddress class
+ * Represents account address information
  */
-class ContactAddress : public QObject
+class AccountAddress : public QObject
 {
     Q_OBJECT
 
@@ -31,8 +32,8 @@ class ContactAddress : public QObject
     Q_PROPERTY(bool primary READ primary WRITE setPrimary NOTIFY primaryAddressChanged)
 
 public:
-    ContactAddress(QObject *parent = 0): QObject(parent) { }
-    ContactAddress(Currency::Type type, QString address, QString label, bool primary): type_(type), address_(address), label_(label), primary_(primary) {}
+    AccountAddress(QObject *parent = 0): QObject(parent) { }
+    AccountAddress(Currency::Type type, QString address, QString label, bool primary): type_(type), address_(address), label_(label), primary_(primary) {}
 
     void setAddress(const QString& address) { address_ = address; emit addressChanged(); }
     QString address() const { return address_; }
@@ -74,14 +75,14 @@ private:
  * @brief The ContactAddresses class
  * List of all contact addresses
  */
-class ContactAddresses: public QAbstractListModel
+class AccountAddresses: public QAbstractListModel
 {
     Q_OBJECT
 
-    Q_PROPERTY(QList<ContactAddress*> list READ getList NOTIFY listChanged)
+    Q_PROPERTY(QList<AccountAddress*> list READ getList NOTIFY listChanged)
 
 public:
-    enum ContactAddressRoles
+    enum AccountAddressRoles
     {
         AddressTypeRole = Qt::UserRole + 1,
         AddressRole,
@@ -90,16 +91,16 @@ public:
         PrimaryRole
     };
 
-    ContactAddresses(QObject *parent = 0);
-    ContactAddresses(Contact* contact, QObject *parent = 0);
-    ~ContactAddresses();
+    AccountAddresses(QObject *parent = 0);
+    AccountAddresses(Account* contact, QObject *parent = 0);
+    ~AccountAddresses();
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
     QHash<int, QByteArray> roleNames() const;
 
-    ContactAddress* getAddress(int idx);
-    QList<ContactAddress*> getList() { return addresses_; }
+    AccountAddress* getAddress(int idx);
+    QList<AccountAddress*> getList() { return addresses_; }
 
     Q_INVOKABLE QVariant get(int idx) { return QVariant::fromValue(addresses_.at(idx)); }
 
@@ -121,16 +122,16 @@ signals:
     void listChanged();
 
 private:
-    QList<ContactAddress*> addresses_;
-    Contact* contact_;
+    QList<AccountAddress*> addresses_;
+    Account* account_;
 };
 
 /**
- * @brief The Contact class
- * Contact information: attributes, addresses & etc.
+ * @brief The Account class
+ * Account information: attributes, addresses & etc.
  */
-class ContactsDb;
-class Contact : public QObject
+class AccountDb;
+class Account : public QObject
 {
     Q_OBJECT
 
@@ -142,8 +143,8 @@ class Contact : public QObject
     Q_PROPERTY(QString avatarSourcePath READ avatarSourcePath)
 
 public:
-    Contact(QObject *parent = 0);
-    ~Contact();
+    Account(QObject *parent = 0);
+    ~Account();
 
     Q_INVOKABLE QString update();
 
@@ -163,7 +164,7 @@ public:
     bool customAvatar() const { return customAvatar_; }
 
     QVariant addresses() { return QVariant::fromValue(addresses_); }
-    ContactAddresses* getAddresses() { return addresses_; }
+    AccountAddresses* getAddresses() { return addresses_; }
 
     Currency::Type primaryAddressType() const;
 
@@ -171,18 +172,14 @@ public:
     Q_INVOKABLE QString primaryAddress() const;
     Q_INVOKABLE QString avatarSource() const;
     Q_INVOKABLE void revertChanges();
-    Q_INVOKABLE bool isNew() { return id_ == 0; }
-
     Q_INVOKABLE QString avatarSourceFolder() const;
     Q_INVOKABLE void copyAvatar(QString);
 
     QString avatarSourcePath() const { return avatarSource(); }
 
-    int id() { return id_; }
-    void setId(int id) { id_ = id; }
-
-    void link(ContactsDb*);
     void refillAddresses();
+
+    Q_INVOKABLE void open(QString);
 
 signals:
     void nameChanged();
@@ -192,19 +189,17 @@ signals:
     void customAvatarChanged();
 
 private:
-    int id_;
     QString name_;
     QString fullName_;
     QString avatar_;
     bool customAvatar_;
-    ContactAddresses* addresses_;
-    json::Document contactInfoBacked_;
-    ContactsDb* db_;
+    AccountAddresses* addresses_;
+    QMap<Currency::Type, QString> privateKeys_;
+    json::Document accountInfoBacked_;
+    AccountDb* db_;
 };
 
 } // wave
 } // gravio
 
-//Q_DECLARE_METATYPE(gravio::wave::Contact)
-
-#endif // CONTACT_H
+#endif // ACCOUNT_H
