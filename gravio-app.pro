@@ -3,6 +3,10 @@ else: QT += qml quick quickcontrols2
 
 CONFIG += plugin c++11
 
+INCLUDEPATH += openssl/include
+LIBS += -LF:/Projects/gravio/gravio-wave/openssl/bin/ -lssl
+LIBS += -LF:/Projects/gravio/gravio-wave/openssl/bin/ -lcrypto
+
 SOURCES += main.cpp \
     logger.cpp \
     application.cpp \
@@ -99,8 +103,6 @@ RESOURCES += \
 dep_root.files += android/*
 dep_root.path = /assets
 INSTALLS += dep_root
-
-INCLUDEPATH += openssl/include
 
 contains(ANDROID_TARGET_ARCH,armeabi-v7a) {
     ANDROID_EXTRA_LIBS = \
