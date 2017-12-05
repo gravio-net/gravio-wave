@@ -10,15 +10,24 @@
 #include "crypto/sha256.h"
 #include "support/cleanse.h"
 
+#ifdef WIN32
+#include <windows.h> // for Windows API
+#include <wincrypt.h>
+#include <sys/time.h>
+#endif
+
 int64_t GetPerformanceCounter()
 {
     int64_t nCounter = 0;
+#ifdef WIN32
+    QueryPerformanceCounter((LARGE_INTEGER*)&nCounter);
+#else
     timeval t;
     gettimeofday(&t, NULL);
     nCounter = (int64_t)(t.tv_sec * 1000000 + t.tv_usec);
+#endif
     return nCounter;
 }
-
 
 uint256 PubKey::GetHash()
 {
@@ -35,11 +44,32 @@ Key::Key(Context* c)
     fValid = false;
 }
 
+/* Number of random bytes returned by GetOSRand.
+ * When changing this constant make sure to change all call sites, and make
+ * sure that the underlying OS APIs for all platforms support the number.
+ * (many cap out at 256 bytes).
+ */
+static const ssize_t NUM_OS_RANDOM_BYTES = 32;
 
 int Key::GetOSRand(unsigned char *ent32)
 {
+#if defined(WIN32)
+    HCRYPTPROV hProvider;
+    int ret = CryptAcquireContextW(&hProvider, nullptr, nullptr, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
+    if (!ret)
+    {
+        return 1;
+    }
+    ret = CryptGenRandom(hProvider, NUM_OS_RANDOM_BYTES, ent32);
+    if (!ret)
+    {
+        return 1;
+    }
+    CryptReleaseContext(hProvider, 0);
+#else
     FILE* f = fopen("/dev/urandom", "rb");
-    if (f == 0) {
+    if (f == 0)
+    {
         return 1;
     }
     int have = 0;
@@ -51,6 +81,7 @@ int Key::GetOSRand(unsigned char *ent32)
         have += n;
     } while (have < 32);
     fclose(f);
+#endif
     return 0;
 }
 

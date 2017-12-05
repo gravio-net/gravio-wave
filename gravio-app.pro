@@ -4,8 +4,9 @@ else: QT += qml quick quickcontrols2
 CONFIG += plugin c++11
 
 INCLUDEPATH += openssl/include
-LIBS += -LF:/Projects/gravio/gravio-wave/openssl/bin/ -lssl
-LIBS += -LF:/Projects/gravio/gravio-wave/openssl/bin/ -lcrypto
+
+android:  LIBS += -L../gravio-wave/openssl/bin/ -lssl -lcrypto
+else: LIBS += ../openssl/bin/mingw/libcrypto-1_1.a ../openssl/bin/mingw/libssl-1_1.a
 
 SOURCES += main.cpp \
     logger.cpp \
@@ -106,6 +107,6 @@ INSTALLS += dep_root
 
 contains(ANDROID_TARGET_ARCH,armeabi-v7a) {
     ANDROID_EXTRA_LIBS = \
-        $$PWD/openssl/bin/libcrypto.so \
-        $$PWD/openssl/bin/libssl.so
+        ../gravio-wave/openssl/bin/libcrypto.so \
+        ../gravio-wave/openssl/bin/libssl.so
 }
