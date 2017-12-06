@@ -192,7 +192,7 @@ Value Value::addArray(const std::wstring& name)
     return Value(value_->FindMember(name)->value, *document_);
 }
 
-Value Value::newArrayItem() const
+Value Value::newArrayItem()
 {
     checkReference();
 

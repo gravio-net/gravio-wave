@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 
-Wallet::Wallet(const WalletType & t = WalletType::GIO):ctx(t), txstore(&ctx, &keystore)
+using namespace gravio::wave;
+
+Wallet::Wallet(const Currency::Type & t = Currency::GIO):ctx(t), txstore(&ctx, &keystore)
 {
     ctx.CreateSign();
 }
@@ -29,7 +31,7 @@ WalletStore::WalletStore()
 
 }
 
-Wallet WalletStore::NewWallet(const WalletType& t)
+Wallet WalletStore::NewWallet(const Currency::Type& t)
 {
     return Wallet(t);
 }

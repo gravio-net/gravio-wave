@@ -5,14 +5,11 @@
 #include "uint256.h"
 #include "crypto/sha256.h"
 
+#include "../currency.h"
+
 #define MESSAGE_START_SIZE 4
 
-enum WalletType
-{
-    GIO,
-    BTC,
-    DOGE
-};
+using namespace gravio::wave;
 
 class Context
 {
@@ -30,14 +27,16 @@ public:
 
         MAX_BASE58_TYPES
     };
-    Context(const WalletType&);
+    Context(const Currency::Type&);
     void CreateSign();
     secp256k1_context* ContextSign() { return secp256k1_context_sign; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     std::string TransactionsListUrl() const { return tx_list_url; }
     std::string TransactionUrl() const { return tx_url; }
+    Currency::Type getType() { return type; }
+
 private:
-    WalletType type;
+    Currency::Type type;
 
     secp256k1_context* secp256k1_context_sign = NULL;
 

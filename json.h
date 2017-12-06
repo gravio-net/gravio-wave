@@ -259,7 +259,7 @@ public:
 
     Value addObject(const std::wstring&);
     Value addArray(const std::wstring&);
-    Value newArrayItem() const;
+    Value newArrayItem();
     void makeArrayItem(Value&);
     Value newItem();
 

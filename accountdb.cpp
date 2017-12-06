@@ -25,22 +25,16 @@ AccountDb* AccountDbFactory::get()
  *      "addresses":
  *      [
  *          {
- *              "addressType": "GIO",
- *              "address": "2Murbwjkkcnke3jek9mlxdLJkdldlkl33",
- *              "label": "Primary address",
- *              "pubKey": "lkjdlfkjgjrijejn8978klj3lkjlkjdflk",
- *              "primary": true
- *          }
- *      ]
- *      "privateKeys":
- *      [
- *          {
- *              "addressType": "GIO",
- *              "privateKey": "ksjdlfkjslkdfjskjfdlskdjflskjd"
- *          }
- *          {
- *              "addressType": "BTC",
- *              "privateKey": "ioyuiowhfeklhnwklfhlwkjehf"
+ *              "type": "GIO",
+ *              "keys":
+ *              [
+ *                  {
+ *                      "key": "3875345384509374509820398452093845",
+ *                      "pubKey": "239084572098364502836405863058234652983590283645276394576293746",
+ *                      "label": "Primary",
+ *                      "primary": true
+ *                  }
+ *              ]
  *          }
  *      ]
  * }

@@ -186,14 +186,14 @@ void ContactsJSONDb::saveAll()
     json::Document lDb;
     lDb.loadFromString("{}");
 
-    const json::Value& lList = lDb.addArray(L"list");
+    json::Value lList = lDb.addArray(L"list");
     QList<Contact*> lValues = cache_.values();
 
     for (int lIdx = 0; lIdx < lValues.length(); lIdx++)
     {
         Contact* lContact = lValues.at(lIdx);
-        const json::Value& lItem = lList.newArrayItem();
-        lContact->toJSON(const_cast<json::Value&>(lItem));
+        json::Value lItem = lList.newArrayItem();
+        lContact->toJSON(lItem);
     }
 
     QString lDbFile = getFile();

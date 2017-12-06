@@ -42,12 +42,10 @@ Item
             var lError = "";
             if (addressDialog.accountAddress == null /*add new address*/)
             {
-                lError = addressDialog.addresses.addAddress(addressTypeCombo.currentText, addressEdit.text, labelEdit.text, primaryEdit.checked);
+                lError = addressDialog.addresses.addAddress(addressTypeCombo.currentText, labelEdit.text, primaryEdit.checked);
             }
             else
             {
-                addressDialog.accountAddress.addressTypeStr = addressTypeCombo.currentText;
-                addressDialog.accountAddress.address = addressEdit.text;
                 addressDialog.accountAddress.label = labelEdit.text;
                 addressDialog.accountAddress.primary = primaryEdit.checked;
 
@@ -67,6 +65,15 @@ Item
         {
             addressDialog.title = "Add address";
             addressDialog.accountAddress = null;
+
+            addressTypeCombo.enabled = true;
+
+            addressTypeCombo.currentIndex = -1;
+            addressEdit.text = "";
+            labelEdit.text = "";
+            primaryEdit.checked = false;
+            addressDialogCurrencyIcon.source = "images/black/info.png";
+
             addressDialog.addresses = addresses;
             addressDialog.open();
         }
@@ -75,6 +82,14 @@ Item
         {
             addressDialog.title = "Edit address";
             addressDialog.accountAddress = accountAddress;
+            addressTypeCombo.enabled = false;
+
+            addressTypeCombo.currentIndex = addressTypeCombo.getIndex();
+            addressEdit.text = addressEdit.getAddress();
+            labelEdit.text = labelEdit.getLabel();
+            primaryEdit.checked = primaryEdit.getPrimary();
+            addressDialogCurrencyIcon.source = addressDialogCurrencyIcon.getIcon();
+
             addressDialog.addresses = addresses;
             addressDialog.open();
         }
@@ -84,77 +99,129 @@ Item
             id: addressColumn
             spacing: 10
 
-            Row
+            Rectangle
             {
-                ComboBox
+                id: addressDialogCurrency
+                color: "transparent"
+                x: 0
+                y: 14
+
+                Image
                 {
-                    id: addressTypeCombo
-                    currentIndex: getIndex()
-                    font.pixelSize: 14
+                    id: addressDialogCurrencyIcon
+                    width: 22
+                    height: 22
+                    mipmap: true
+                    fillMode: Image.PreserveAspectFit
+                    source: getIcon()
 
-                    // TODO: make model from gravio::wave::Currency
-                    model: ListModel
+                    function getIcon(value)
                     {
-                        id: addressTypeModel
-                        ListElement
-                        {
-                            text: "GIO"
-                        }
-                        ListElement
-                        {
-                            text: "BTC"
-                        }
-                        ListElement
-                        {
-                            text: "LTC"
-                        }
-                    }
-
-                    function getIndex()
-                    {
-                        if(addressDialog.accountAddress == null) return -1;
-
-                        switch(addressDialog.accountAddress.addressTypeStr)
-                        {
-                            case "GIO": return 0;
-                            case "BTC": return 1;
-                            case "LTC": return 2;
-                        }
-
-                        return -1;
+                        if(value === undefined)
+                            return (addressDialog.accountAddress != null) ? "images/black/" + addressDialog.accountAddress.originalAddressType + ".png" : "";
+                        return "images/black/" + value + ".png";
                     }
                 }
             }
-            Row
+            ComboBox
             {
+                id: addressTypeCombo
+                currentIndex: getIndex()
+                font.pixelSize: 14
+                enabled: true
+                x: addressDialogCurrencyIcon.width + 5
+
+                // TODO: make model from gravio::wave::Currency
+                model: ListModel
+                {
+                    id: addressTypeModel
+                    ListElement
+                    {
+                        text: "GIO"
+                    }
+                    ListElement
+                    {
+                        text: "BTC"
+                    }
+                    ListElement
+                    {
+                        text: "LTC"
+                    }
+                    ListElement
+                    {
+                        text: "DOGE"
+                    }
+                }
+
+                onActivated:
+                {
+                    addressDialogCurrencyIcon.source = addressDialogCurrencyIcon.getIcon(currentText);
+                }
+
+                function getIndex()
+                {
+                    if(addressDialog.accountAddress == null) return -1;
+
+                    switch(addressDialog.accountAddress.originalAddressType)
+                    {
+                        case "GIO": return 0;
+                        case "BTC": return 1;
+                        case "LTC": return 2;
+                        case "DOGE": return 3;
+                    }
+
+                    return -1;
+                }
+            }
+            Rectangle
+            {
+                y: addressTypeCombo.height + 10
                 TextField
                 {
                     id: addressEdit
-                    text: (addressDialog.accountAddress != null) ? addressDialog.accountAddress.address : ""
-                    placeholderText: "Enter address"
+                    text: getAddress()
+                    placeholderText: "Address will be there"
                     width: addressDialog.width - 50
                     font.pixelSize: 14
+                    readOnly: true
+
+                    function getAddress()
+                    {
+                        return (addressDialog.accountAddress != null) ? addressDialog.accountAddress.address : "";
+                    }
                 }
             }
-            Row
+            Rectangle
             {
+                y: addressTypeCombo.height + 10 + addressEdit.height + 10
                 TextField
                 {
                     id: labelEdit
-                    text: (addressDialog.accountAddress != null) ? addressDialog.accountAddress.label : ""
+                    text: getLabel()
                     placeholderText: "Enter label"
                     width: addressDialog.width - 50
                     font.pixelSize: 14
+
+                    function getLabel()
+                    {
+                        return (addressDialog.accountAddress != null) ? addressDialog.accountAddress.label : "";
+                    }
                 }
             }
-            Row
+            Rectangle
             {
+                y: addressTypeCombo.height + 10 + addressEdit.height + 10 + labelEdit.height + 10
                 CheckBox
                 {
                     id: primaryEdit
                     text: "Primary"
-                    checked: (addressDialog.accountAddress != null) ? addressDialog.accountAddress.primary : false
+                    checked: getPrimary()
                     font.pixelSize: 14
+
+                    function getPrimary()
+                    {
+                        return (addressDialog.accountAddress != null) ? addressDialog.accountAddress.primary : false;
+                    }
                 }
             }
         }
@@ -733,6 +800,7 @@ Item
                                             onClicked:
                                             {
                                                 addressesView.currentIndex = index;
+                                                //console.log(index);
                                                 addressDialog.editAddress(gravioAccount.addresses.get(index), gravioAccount.addresses);
                                             }
                                         }

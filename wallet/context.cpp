@@ -5,15 +5,14 @@
 #include "secp256k1/include/secp256k1.h"
 #include "secp256k1/include/secp256k1_ecdh.h"
 
-
-Context::Context(const WalletType& t = WalletType::GIO)
+Context::Context(const Currency::Type& t = Currency::GIO)
 {
     type = t;
     switch(t)
     {
-    case BTC:
+    case Currency::BTC:
         break;
-    case DOGE:
+    case Currency::DOGE:
         pchMessageStart[0] = 0xc0;
         pchMessageStart[1] = 0xc0;
         pchMessageStart[2] = 0xc0;

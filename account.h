@@ -9,9 +9,75 @@
 
 #include "currency.h"
 #include "json.h"
+#include "wallet/walletstore.h"
 
 namespace gravio {
 namespace wave {
+
+/**
+ * @brief The AddressKey facade class
+ * Holds currency address (key/pubKey)
+ */
+class AddressKey
+{
+public:
+    AddressKey(Context* context) : context_(context), type_(context->getType()), key_(context)
+    {
+        primary_ = false; label_ = "";
+    }
+    ~AddressKey()
+    {
+    }
+
+    void fromJSON(json::Value&);
+    void toJSON(json::Value&);
+
+    Key& key() { return key_; }
+    PubKey& pubKey() { return pubKey_; }
+
+    Currency::Type type() { return type_; }
+    Context* context() { return context_; }
+
+    bool primary() { return primary_; }
+    void setPrimary(bool primary) { primary_ = primary; }
+
+    QString label() { return label_; }
+    void setLabel(QString label) { label_ = label; }
+
+private:
+    Context* context_;
+    Currency::Type type_;
+    Key key_;
+    PubKey pubKey_;
+    QString label_;
+    bool primary_;
+};
+
+/**
+ * @brief The AddressKeyFactory facade class
+ * Produces new AddressKey
+ */
+class AddressKeyFactory
+{
+public:
+    AddressKeyFactory(Currency::Type type) : type_(type), ctx_(type) {}
+    ~AddressKeyFactory();
+
+    AddressKey* newKey();
+
+    QList<AddressKey*> keys() { return keys_; }
+    Currency::Type type() { return type_; }
+
+    void fromJSON(json::Value&);
+    void toJSON(json::Value&);
+
+    void clear();
+
+private:
+    Currency::Type type_;
+    Context ctx_;
+    QList<AddressKey*> keys_;
+};
 
 // forward declaration
 class Account;
@@ -24,55 +90,52 @@ class AccountAddress : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QString address READ address WRITE setAddress NOTIFY addressChanged)
+    Q_PROPERTY(QString address READ address)
+    Q_PROPERTY(QString addressType READ addressType)
+    Q_PROPERTY(QString originalAddressType READ originalAddressType)
     Q_PROPERTY(QString label READ label WRITE setLabel NOTIFY labelChanged)
-    Q_PROPERTY(Currency::Type addressType READ addressType WRITE setAddressType NOTIFY addressTypeChanged)
-    Q_PROPERTY(QString addressTypeStr READ addressTypeStr WRITE setAddressTypeStr NOTIFY addressTypeChanged)
-    Q_PROPERTY(QString pubKey READ pubKey WRITE setPubKey NOTIFY pubKeyChanged)
     Q_PROPERTY(bool primary READ primary WRITE setPrimary NOTIFY primaryAddressChanged)
 
 public:
-    AccountAddress(QObject *parent = 0): QObject(parent) { }
-    AccountAddress(Currency::Type type, QString address, QString label, bool primary): type_(type), address_(address), label_(label), primary_(primary) {}
+    AccountAddress(QObject *parent = 0): QObject(parent) { key_ = 0; }
+    AccountAddress(Currency::Type type, AddressKey* key, bool hideAddressType): key_(key), type_(type) { hideAddressType_ = hideAddressType; }
 
-    void setAddress(const QString& address) { address_ = address; emit addressChanged(); }
-    QString address() const { return address_; }
+    QString address()
+    {
+        if (!address_.length())
+        {
+            uint160 lId = key_->pubKey().GetID();
+            CryptoAddress lAddress(key_->context(), lId);
 
-    void setLabel(const QString& label) { label_ = label; emit labelChanged(); }
-    QString label() const { return label_; }
+            std::string lAddressStr = lAddress.ToString();
+            address_ = QString::fromStdString(lAddressStr);
+        }
 
-    void setAddressType(Currency::Type type) { type_ = type; emit addressTypeChanged(); }
-    Currency::Type addressType() const { return type_; }
+        return address_;
+    }
 
-    void setAddressTypeStr(const QString& type) { type_ = Currency::type(type.toStdString()); emit addressTypeChanged(); }
-    QString addressTypeStr() const { return QString(Currency::name(type_).c_str()); }
+    void setLabel(const QString& label) { key_->setLabel(label); emit labelChanged(); }
+    QString label() const { return key_->label(); }
 
-    void setPubKey(const QString& pubKey) { pubKey_ = pubKey; emit pubKeyChanged(); }
-    QString pubKey() const { return pubKey_; }
+    QString addressType() const { return hideAddressType_ ? "" : QString(Currency::name(type_).c_str()); }
+    QString originalAddressType() const { return QString(Currency::name(type_).c_str()); }
 
-    void setPrimary(bool primary) { primary_ = primary; emit primaryAddressChanged(); }
-    bool primary() const { return primary_; }
-
-    void fromJSON(json::Value&);
-    void toJSON(json::Value&);
+    void setPrimary(bool primary) { key_->setPrimary(primary); emit primaryAddressChanged(); }
+    bool primary() const { return key_->primary(); }
 
 signals:
-    void addressChanged();
     void labelChanged();
-    void addressTypeChanged();
-    void pubKeyChanged();
     void primaryAddressChanged();
 
 private:
+    AddressKey* key_;
     Currency::Type type_;
+    bool hideAddressType_;
     QString address_;
-    QString label_;
-    QString pubKey_;
-    bool primary_;
 };
 
 /**
- * @brief The ContactAddresses class
+ * @brief The AccountAddresses class
  * List of all contact addresses
  */
 class AccountAddresses: public QAbstractListModel
@@ -85,9 +148,9 @@ public:
     enum AccountAddressRoles
     {
         AddressTypeRole = Qt::UserRole + 1,
+        OriginalAddressTypeRole,
         AddressRole,
         LabelRole,
-        PubKeyRole,
         PrimaryRole
     };
 
@@ -98,8 +161,6 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
     QHash<int, QByteArray> roleNames() const;
-
-    AccountAddress* getAddress(int idx);
     QList<AccountAddress*> getList() { return addresses_; }
 
     Q_INVOKABLE QVariant get(int idx) { return QVariant::fromValue(addresses_.at(idx)); }
@@ -109,14 +170,17 @@ public:
 
     void beginUpdate() { beginResetModel(); }
     void endUpdate() { endResetModel(); }
-    void clear();
 
-    Q_INVOKABLE QString addAddress(QString addressType, QString address, QString label, bool primary);
-    Q_INVOKABLE QString removeAddress(int idx);
+    Q_INVOKABLE QString addAddress(QString addressType, QString label, bool primary);
     Q_INVOKABLE QString updateModel();
     Q_INVOKABLE QString refetchModel();
 
-    bool contains(const QString&);
+    AddressKeyFactory* getAddressFactory(Currency::Type type);
+
+    void clear();
+
+private:
+    void makeAddresses();
 
 signals:
     void listChanged();
@@ -124,6 +188,7 @@ signals:
 private:
     QList<AccountAddress*> addresses_;
     Account* account_;
+    QMap<Currency::Type, AddressKeyFactory*> factories_;
 };
 
 /**
@@ -164,12 +229,7 @@ public:
     bool customAvatar() const { return customAvatar_; }
 
     QVariant addresses() { return QVariant::fromValue(addresses_); }
-    AccountAddresses* getAddresses() { return addresses_; }
 
-    Currency::Type primaryAddressType() const;
-
-    Q_INVOKABLE QString primaryAddressTypeStr() const;
-    Q_INVOKABLE QString primaryAddress() const;
     Q_INVOKABLE QString avatarSource() const;
     Q_INVOKABLE void revertChanges();
     Q_INVOKABLE QString avatarSourceFolder() const;
@@ -180,6 +240,9 @@ public:
     void refillAddresses();
 
     Q_INVOKABLE void open(QString);
+
+    //
+    AddressKeyFactory* getAddressFactory(Currency::Type type) { return addresses_->getAddressFactory(type); }
 
 signals:
     void nameChanged();
@@ -194,7 +257,6 @@ private:
     QString avatar_;
     bool customAvatar_;
     AccountAddresses* addresses_;
-    QMap<Currency::Type, QString> privateKeys_;
     json::Document accountInfoBacked_;
     AccountDb* db_;
 };

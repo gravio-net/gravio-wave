@@ -419,6 +419,10 @@ Page
                         {
                             text: "LTC"
                         }
+                        ListElement
+                        {
+                            text: "DOGE"
+                        }
                     }
 
                     function getIndex()
@@ -430,6 +434,7 @@ Page
                             case "GIO": return 0;
                             case "BTC": return 1;
                             case "LTC": return 2;
+                            case "DOGE": return 3;
                         }
 
                         return -1;

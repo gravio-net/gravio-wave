@@ -10,10 +10,12 @@
 #include "cryptoaddress.h"
 #include <list>
 
+using namespace gravio::wave;
+
 class Wallet
 {
 public:
-    Wallet(const WalletType&);
+    Wallet(const Currency::Type&);
     Key NewKey();
     void SetKey(Key& k);
     void AddPubKey(PubKey& pk);
@@ -31,7 +33,7 @@ class WalletStore
 {
 public:
     WalletStore();
-    Wallet NewWallet(const WalletType& t = WalletType::GIO);
+    Wallet NewWallet(const Currency::Type& t = Currency::GIO);
 };
 
 #endif // WALLETSTORE_H

@@ -9,7 +9,6 @@
 #include <string.h>
 #include <map>
 
-
 class Transaction
 {
 public:

@@ -117,8 +117,8 @@ void ContactAddresses::toJSON(json::Value& root)
 {
     for(int lIdx = 0; lIdx < addresses_.size(); lIdx++)
     {
-        const json::Value& lItem = root.newArrayItem();
-        addresses_.at(lIdx)->toJSON(const_cast<json::Value&>(lItem));
+        json::Value lItem = root.newArrayItem();
+        addresses_.at(lIdx)->toJSON(lItem);
     }
 }
 

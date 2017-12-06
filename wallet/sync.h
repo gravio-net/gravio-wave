@@ -13,5 +13,4 @@ public:
     std::string SyncWait(Context* ctx, TransactionStore* store, std::string address);
 };
 
-
 #endif // SYNC_H

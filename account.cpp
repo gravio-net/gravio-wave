@@ -1,31 +1,96 @@
 #include "account.h"
 #include "accountdb.h"
 #include "module.h"
+#include "wallet/utilstrencodings.h"
 
 #include <QFileInfo>
 
 using namespace gravio::wave;
 
 //
-// AccountAddress
+// AddressKey
 //
-void AccountAddress::fromJSON(json::Value& root)
+void AddressKey::fromJSON(json::Value& root)
 {
-    setAddressType(Currency::type(root[L"addressType"].getAString()));
-    setAddress(root[L"address"].getQString());
+    std::string lKey = root[L"key"].getAString();
+    std::vector<unsigned char> lHexKey = ParseHex(lKey);
+    key_.Set(lHexKey.begin(), lHexKey.end());
+
+    std::string lPubKeyStr = root[L"pubKey"].getAString();
+    std::vector<unsigned char> lPubKeyHex = ParseHex(lPubKeyStr);
+    pubKey_.Set(lPubKeyHex.begin(), lPubKeyHex.end());
+
     setLabel(root[L"label"].getQString());
-    setPubKey(root[L"pubKey"].getQString());
     setPrimary(root[L"primary"].getBool());
 }
 
-void AccountAddress::toJSON(json::Value& root)
+void AddressKey::toJSON(json::Value& root)
 {
-    std::string lAddressType = Currency::name(addressType());
-    root.addString(L"addressType", std::wstring(lAddressType.begin(), lAddressType.end()));
-    root.addString(L"address", address().toStdWString());
-    root.addString(L"label", label().toStdWString());
-    root.addString(L"pubKey", pubKey().toStdWString());
+    std::string lKeyHexStr = HexStr(key_.begin(), key_.end());
+    root.addString(L"key", std::wstring(lKeyHexStr.begin(), lKeyHexStr.end()));
+
+    std::string lPubKeyHexStr = HexStr(pubKey_.begin(), pubKey_.end());
+    root.addString(L"pubKey", std::wstring(lPubKeyHexStr.begin(), lPubKeyHexStr.end()));
+    root.addString(L"label", std::wstring(label().toStdWString()));
     root.addBool(L"primary", primary());
+}
+
+//
+// AddressKeyFactory
+//
+
+AddressKeyFactory::~AddressKeyFactory()
+{
+    clear();
+}
+
+void AddressKeyFactory::clear()
+{
+    qDeleteAll(keys_);
+    keys_.clear();
+}
+
+AddressKey* AddressKeyFactory::newKey()
+{
+    AddressKey* lKey = new AddressKey(&ctx_);
+    lKey->key().MakeNew(); // make new secret
+
+    PubKey lPubKey = lKey->key().GetPubKey(); // make new pubKey
+    lKey->pubKey().Set(lPubKey.begin(), lPubKey.end());
+
+    keys_.push_back(lKey);
+
+    return lKey;
+}
+
+void AddressKeyFactory::fromJSON(json::Value& root)
+{
+    json::Value lList;
+    if (root.find(L"keys", lList))
+    {
+        for(size_t lIdx = 0; lIdx < lList.size(); lIdx++)
+        {
+            AddressKey* lAddressKey = new AddressKey(&ctx_);
+            json::Value lEntry = lList[lIdx];
+            lAddressKey->fromJSON(lEntry);
+            keys_.push_back(lAddressKey);
+        }
+    }
+}
+
+void AddressKeyFactory::toJSON(json::Value& root)
+{
+    std::string lAddressType = Currency::name(type());
+    root.addString(L"type", std::wstring(lAddressType.begin(), lAddressType.end()));
+
+    json::Value lList = root.addArray(L"keys");
+
+    for(int lIdx = 0; lIdx < keys_.size(); lIdx++)
+    {
+        AddressKey* lKey = keys_[lIdx];
+        json::Value lItem = lList.newArrayItem();
+        lKey->toJSON(lItem);
+    }
 }
 
 //
@@ -43,11 +108,7 @@ AccountAddresses::AccountAddresses(Account* account, QObject *parent): QAbstract
 
 AccountAddresses::~AccountAddresses()
 {
-    //
-    // Always delete objects
-    //
-    qDeleteAll(addresses_);
-    addresses_.clear();
+    clear();
 }
 
 int AccountAddresses::rowCount(const QModelIndex &parent) const
@@ -70,13 +131,13 @@ QVariant AccountAddresses::data(const QModelIndex &index, int role) const
     switch (role)
     {
     case AddressTypeRole:
-        return addresses_.at(index.row())->addressTypeStr();
+        return addresses_.at(index.row())->addressType();
+    case OriginalAddressTypeRole:
+        return addresses_.at(index.row())->originalAddressType();
     case AddressRole:
         return addresses_.at(index.row())->address();
     case LabelRole:
         return addresses_.at(index.row())->label();
-    case PubKeyRole:
-        return addresses_.at(index.row())->pubKey();
     case PrimaryRole:
         return addresses_.at(index.row())->primary();
     default:
@@ -88,48 +149,85 @@ QHash<int, QByteArray> AccountAddresses::roleNames() const
 {
     QHash<int, QByteArray> lRoles = QAbstractListModel::roleNames();
     lRoles[AddressTypeRole] = "addressType";
+    lRoles[OriginalAddressTypeRole] = "originalAddressType";
     lRoles[AddressRole] = "address";
     lRoles[LabelRole] = "label";
-    lRoles[PubKeyRole] = "pubKey";
     lRoles[PrimaryRole] = "primary";
 
     return lRoles;
-}
-
-AccountAddress* AccountAddresses::getAddress(int idx)
-{
-    if (idx < addresses_.size()) return addresses_.at(idx);
-    return 0;
 }
 
 void AccountAddresses::fromJSON(json::Value& list)
 {
     for(size_t lIdx = 0; lIdx < list.size(); lIdx++)
     {
-        AccountAddress* lAddress = new AccountAddress();
-        const json::Value& lItem = list[lIdx];
-        lAddress->fromJSON(const_cast<json::Value&>(lItem));
-        addresses_.push_back(lAddress);
+        json::Value lItem = list[lIdx];
+
+        json::Value lAddressTypeItem;
+        if(lItem.find(L"type", lAddressTypeItem))
+        {
+            AddressKeyFactory* lFactory = new AddressKeyFactory(Currency::type(lAddressTypeItem.getAString()));
+            lFactory->fromJSON(lItem);
+            factories_.insert(lFactory->type(), lFactory);
+        }
+    }
+
+    makeAddresses();
+}
+
+void AccountAddresses::makeAddresses()
+{
+    qDeleteAll(addresses_);
+    addresses_.clear();
+
+    for(int lIdx = 0; lIdx < factories_.values().size(); lIdx++)
+    {
+        bool lFirst = true;
+        AddressKeyFactory* lFactory = factories_.values()[lIdx];
+        for(int lAddrIdx = 0; lAddrIdx < lFactory->keys().size(); lAddrIdx++)
+        {
+            AddressKey* lKey = lFactory->keys()[lAddrIdx];
+
+            AccountAddress* lAddress = new AccountAddress(lKey->type(), lKey, !lFirst);
+            addresses_.push_back(lAddress);
+            lFirst = false;
+        }
     }
 }
 
 void AccountAddresses::toJSON(json::Value& root)
 {
-    for(int lIdx = 0; lIdx < addresses_.size(); lIdx++)
+    for(int lIdx = 0; lIdx < factories_.size(); lIdx++)
     {
-        const json::Value& lItem = root.newArrayItem();
-        addresses_.at(lIdx)->toJSON(const_cast<json::Value&>(lItem));
+        json::Value lItem = root.newArrayItem();
+        AddressKeyFactory* lFactory = factories_.values()[lIdx];
+        lFactory->toJSON(lItem);
     }
 }
 
-QString AccountAddresses::addAddress(QString addressType, QString address, QString label, bool primary)
+QString AccountAddresses::addAddress(QString addressType, QString label, bool primary)
 {
     beginResetModel();
 
-    // TODO: check unique on label, address and reset primary if needed
+    AddressKeyFactory* lFactory = 0;
+    QMap<Currency::Type, AddressKeyFactory*>::iterator lType = factories_.find(Currency::type(addressType.toStdString()));
+    if (lType != factories_.end())
+    {
+        lFactory = lType.value();
+    }
+    else
+    {
+        lFactory = new AddressKeyFactory(Currency::type(addressType.toStdString()));
+        factories_.insert(lFactory->type(), lFactory);
+    }
 
-    AccountAddress* lAddress = new AccountAddress(Currency::type(addressType.toStdString()), address, label, primary);
-    addresses_.push_back(lAddress);
+    // make new one
+    AddressKey* lKey = lFactory->newKey();
+    lKey->setLabel(label);
+    lKey->setPrimary(primary);
+
+    // refill addresses array
+    makeAddresses();
 
     endResetModel();
 
@@ -167,33 +265,16 @@ void AccountAddresses::clear()
     //
     qDeleteAll(addresses_);
     addresses_.clear();
+
+    qDeleteAll(factories_.values());
+    factories_.clear();
 }
 
-QString AccountAddresses::removeAddress(int idx)
+AddressKeyFactory* AccountAddresses::getAddressFactory(Currency::Type type)
 {
-    beginResetModel();
-
-    if (idx < addresses_.size())
-    {
-        delete (AccountAddress*)addresses_.at(idx);
-        addresses_.removeAt(idx);
-    }
-
-    endResetModel();
-
-    return QString("");
-}
-
-bool AccountAddresses::contains(const QString& filter)
-{
-    for(int lIdx = 0; lIdx < addresses_.size(); lIdx++)
-    {
-        if (addresses_[lIdx]->address().contains(filter, Qt::CaseSensitivity::CaseInsensitive) ||
-                addresses_[lIdx]->addressTypeStr().contains(filter, Qt::CaseSensitivity::CaseInsensitive))
-            return true;
-    }
-
-    return false;
+    QMap<Currency::Type, AddressKeyFactory*>::iterator lItem = factories_.find(type);
+    if (lItem != factories_.end()) return lItem.value();
+    return 0;
 }
 
 //
@@ -232,33 +313,6 @@ QString Account::update()
     }
 
     return QString();
-}
-
-Currency::Type Account::primaryAddressType() const
-{
-    for(int lIdx = 0; lIdx < addresses_->rowCount(); lIdx++)
-    {
-        AccountAddress* lAddress = addresses_->getAddress(lIdx);
-        if (lAddress->primary()) return lAddress->addressType();
-    }
-
-    return Currency::Unknown;
-}
-
-QString Account::primaryAddressTypeStr() const
-{
-    return QString::fromStdString(Currency::name(primaryAddressType()));
-}
-
-QString Account::primaryAddress() const
-{
-    for(int lIdx = 0; lIdx < addresses_->rowCount(); lIdx++)
-    {
-        AccountAddress* lAddress = addresses_->getAddress(lIdx);
-        if (lAddress->primary()) return lAddress->address();
-    }
-
-    return QString("");
 }
 
 void Account::refillAddresses()
