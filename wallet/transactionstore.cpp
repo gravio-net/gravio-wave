@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+using namespace gravio::wave::backend;
+
 Transaction::Transaction()
 {
 

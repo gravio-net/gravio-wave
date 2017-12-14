@@ -11,6 +11,9 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 
+using namespace gravio::wave::backend;
+
+
 bool DecodeHexTx(CTransaction& tx, const std::string& strHexTx, bool fTryNoWitness = false)
 {
     if (!IsHex(strHexTx))
@@ -42,9 +45,73 @@ bool DecodeHexTx(CTransaction& tx, const std::string& strHexTx, bool fTryNoWitne
     return true;
 }
 
-TransactionSync::TransactionSync()
+DataSync::DataSync()
 {
+    manager = new QNetworkAccessManager(this);
+    //connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(Finished(QNetworkReply*)));
+}
 
+void DataSync::SendRequest(const Request& r)
+{
+    QString url = QString::fromStdString(r.Url);
+    reply =  manager->get(QNetworkRequest(QUrl(url)));
+    connect(reply, SIGNAL(finished()), this, SLOT(ReadyRead()));
+    connect(reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(slogError(QNetworkReply::NetworkError)));
+    qInfo() << "DataSync make request " <<url;
+}
+
+void DataSync::Finished(QNetworkReply* reply)
+{
+    qInfo() << "DataSync request complete";
+    //QByteArray arr = reply->readAll();
+    //qInfo() << QString::fromStdString(arr.toStdString());
+    //reply->deleteLater();
+    //emit RequestComplete(reply);
+}
+
+void DataSync::ReadyRead()
+{
+    qInfo() << "Readall start";
+    QByteArray arr = reply->readAll();
+    qInfo() << "Readall finished";
+    emit RequestComplete(arr);
+}
+
+void DataSync::slotError(QNetworkReply::NetworkError)
+{}
+
+/*void DataSync::RequestComplete(QNetworkReply* reply)
+{
+    ;
+}*/
+
+TransactionSync::TransactionSync(Context* c, DataSync* s):ctx(c), sync(s)
+{
+    timer = new QTimer(this);
+    processing = false;
+    connect(timer, SIGNAL(timeout()), this, SLOT(StartSync()));
+    connect(sync, SIGNAL(RequestComplete(QByteArray)),
+            this, SLOT(RequestFinished(QByteArray)));
+    timer->start(10000);
+}
+
+void TransactionSync::StartSync()
+{
+    if(processing)
+        return;
+    processing = true;
+    state = blocks_count;
+    qInfo() << "start sync";
+    Request r;
+    r.Url = ctx->BlockCountUrl();
+    sync->SendRequest(r);
+    qInfo() << "start sync complete";
+}
+
+void TransactionSync::RequestFinished(QByteArray arr)
+{
+    qInfo() << "TransactionSync request complete";
+    qInfo() << QString::fromStdString(arr.toStdString());
 }
 
 std::string TransactionSync::SyncWait(Context* ctx, TransactionStore* store, std::string address)

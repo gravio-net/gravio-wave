@@ -280,7 +280,7 @@ AddressKeyFactory* AccountAddresses::getAddressFactory(Currency::Type type)
 //
 // Account
 //
-Account::Account(QObject *parent): QObject(parent)
+Account::Account(QObject *parent): QObject(parent),w_()
 {
     db_ = AccountDbFactory::get();
     db_->link(this);

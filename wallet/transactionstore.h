@@ -9,6 +9,10 @@
 #include <string.h>
 #include <map>
 
+namespace gravio {
+namespace wave {
+namespace backend {
+
 class Transaction
 {
 public:
@@ -31,5 +35,9 @@ private:
     KeyStore* keystore;
     std::map<uint256, CTransaction> txlist;
 };
+
+} //backend
+} // wave
+} // gravio
 
 #endif // TRANSACTION_H

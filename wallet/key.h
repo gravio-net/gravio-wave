@@ -7,6 +7,11 @@
 #include <list>
 #include "hash.h"
 
+namespace gravio {
+namespace wave {
+namespace backend {
+
+
 class PubKey
 {
 public:
@@ -100,5 +105,9 @@ private:
     Key key;
     std::list<PubKey> pubkeys;
 };
+
+} //backend
+} // wave
+} // gravio
 
 #endif // KEY_H

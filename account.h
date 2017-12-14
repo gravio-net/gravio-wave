@@ -14,6 +14,8 @@
 namespace gravio {
 namespace wave {
 
+using namespace backend;
+
 /**
  * @brief The AddressKey facade class
  * Holds currency address (key/pubKey)
@@ -259,6 +261,7 @@ private:
     AccountAddresses* addresses_;
     json::Document accountInfoBacked_;
     AccountDb* db_;
+    Wallet w_;
 };
 
 } // wave
