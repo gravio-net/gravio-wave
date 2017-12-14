@@ -24,8 +24,8 @@ TransactionStore::TransactionStore(Context* c, KeyStore* k) : ctx(c), keystore(k
 
 bool TransactionStore::HasTx(std::string txid)
 {
-    std::vector<unsigned char> hash = ParseHex(txid);
-    uint256 id(hash);
+    uint256 id;
+    id.SetHex(txid);
     if(txlist.find(id) != txlist.end())
         return true;
     return false;

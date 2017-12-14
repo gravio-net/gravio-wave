@@ -43,7 +43,7 @@ Context::Context(const Currency::Type& t = Currency::GIO)
         //base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x05)(0x25)(0xC3)(0x9B).convert_to_container<std::vector<unsigned char> >();
 
         nDefaultPort = 23333;
-        tx_list_url = "http://blockexplorer.gravio.net/ext/getaddress/";
+        tx_list_url = "http://blockexplorer.gravio.net/ext/getaddress/2MepwNfMDN1u5yiUb1RtNcWnmK8TnQQdQBy";
         tx_url = "http://blockexplorer.gravio.net/api/getrawtransaction";
         block_count_url = "http://blockexplorer.gravio.net/api/getblockcount";
         break;

@@ -52,7 +52,7 @@ class TransactionSync : public QObject
     Q_OBJECT
 public:
 
-    TransactionSync(Context* c, DataSync* s, TransactionStore* store);
+    TransactionSync(Context* c, DataSync* s, TransactionStore* st);
     virtual ~TransactionSync(){}
     std::string SyncWait(Context* ctx, TransactionStore* store, std::string address);
 public slots:
@@ -67,7 +67,7 @@ private:
     QTimer* timer;
     bool processing;
     ProcessState state;
-    std::list<Request> queue;
+    std::list<std::string> queue;
 };
 
 } //backend

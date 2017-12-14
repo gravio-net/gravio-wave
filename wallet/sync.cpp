@@ -56,7 +56,7 @@ void DataSync::SendRequest(const Request& r)
     QString url = QString::fromStdString(r.Url);
     reply =  manager->get(QNetworkRequest(QUrl(url)));
     connect(reply, SIGNAL(finished()), this, SLOT(ReadyRead()));
-    connect(reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(slogError(QNetworkReply::NetworkError)));
+    connect(reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(slotError(QNetworkReply::NetworkError)));
     qInfo() << "DataSync make request " <<url;
 }
 
@@ -90,7 +90,7 @@ void DataSync::slotError(QNetworkReply::NetworkError err)
     ;
 }*/
 
-TransactionSync::TransactionSync(Context* c, DataSync* s):ctx(c), sync(s)
+TransactionSync::TransactionSync(Context* c, DataSync* s, TransactionStore* st):ctx(c), sync(s), store(st)
 {
     timer = new QTimer(this);
     processing = false;
@@ -122,7 +122,7 @@ void TransactionSync::RequestFinished(QByteArray arr)
     qInfo() << QString::fromStdString(arr.toStdString());
     if(state == blocks_count)
     {
-        qInfo() << "Blocks count result " << arr.toString();
+        qInfo() << "Blocks count result " << QString::fromStdString(arr.toStdString());
         size_t bc = arr.toUInt();
         store->SetBlocksCount(bc);
         state = txlist;
@@ -130,9 +130,66 @@ void TransactionSync::RequestFinished(QByteArray arr)
         r.Url = ctx->TransactionsListUrl();
         sync->SendRequest(r);
     }
-    if(state == txlist)
+    else if(state == txlist)
     {
-        qInfo() << "Transactions list result " << arr.toString();
+        qInfo() << "Transactions list result " << QString::fromStdString(arr.toStdString());
+        QJsonDocument doc(QJsonDocument::fromJson(arr));
+        QJsonObject json = doc.object();
+        QJsonArray txs = json["last_txs"].toArray();
+        for (int i = 0; i < txs.size(); ++i)
+        {
+            QJsonObject tx = txs[i].toObject();
+            std::string txhash = tx["addresses"].toString().toStdString();
+            qInfo() << "Check tx hash " << QString::fromStdString(txhash);
+            if(!store->HasTx(txhash))
+            {
+                qInfo() << "not found";
+                std::string urltx = ctx->TransactionUrl() + "?txid="
+                        + tx["addresses"].toString().toStdString() + "&decrypt=0";
+                queue.push_back(urltx);
+            }
+            //std::vector<unsigned char> hash = ParseHex(txhash);
+            //uint256 id(hash);
+            uint256  id;
+            id.SetHex(txhash);
+            qInfo() << QString::fromStdString(id.ToString());
+        }
+        if(queue.size())
+        {
+            std::string url = queue.front();
+            queue.pop_front();
+            state = tx;
+            Request r;
+            r.Url = url;
+            sync->SendRequest(r);
+        }
+        else
+        {
+            processing = false;
+        }
+    }
+    else if(state == tx)
+    {
+        qInfo() << "Transaction result " << QString::fromStdString(arr.toStdString());
+        CTransaction t;
+        if (DecodeHexTx(t, arr.toStdString()))
+        {
+            store->AddTx(t);
+            qInfo() << "Transaction decode " << QString::fromStdString(t.ToString());
+        }
+        if(queue.size())
+        {
+            std::string url = queue.front();
+            queue.pop_front();
+            state = tx;
+            Request r;
+            r.Url = url;
+            sync->SendRequest(r);
+        }
+        else
+        {
+            processing = false;
+        }
     }
 }
 
