@@ -77,8 +77,13 @@ void DataSync::ReadyRead()
     emit RequestComplete(arr);
 }
 
-void DataSync::slotError(QNetworkReply::NetworkError)
-{}
+void DataSync::slotError(QNetworkReply::NetworkError err)
+{
+    //show error inf
+
+    qInfo() << "NetworkError";
+    emit RequestError(err);
+}
 
 /*void DataSync::RequestComplete(QNetworkReply* reply)
 {
@@ -92,6 +97,9 @@ TransactionSync::TransactionSync(Context* c, DataSync* s):ctx(c), sync(s)
     connect(timer, SIGNAL(timeout()), this, SLOT(StartSync()));
     connect(sync, SIGNAL(RequestComplete(QByteArray)),
             this, SLOT(RequestFinished(QByteArray)));
+    connect(sync, SIGNAL(RequestError(QByteArray)),
+            this, SLOT(RequestError(QByteArray)));
+    StartSync();
     timer->start(10000);
 }
 
@@ -112,6 +120,26 @@ void TransactionSync::RequestFinished(QByteArray arr)
 {
     qInfo() << "TransactionSync request complete";
     qInfo() << QString::fromStdString(arr.toStdString());
+    if(state == blocks_count)
+    {
+        qInfo() << "Blocks count result " << arr.toString();
+        size_t bc = arr.toUInt();
+        store->SetBlocksCount(bc);
+        state = txlist;
+        Request r;
+        r.Url = ctx->TransactionsListUrl();
+        sync->SendRequest(r);
+    }
+    if(state == txlist)
+    {
+        qInfo() << "Transactions list result " << arr.toString();
+    }
+}
+
+void TransactionSync::RequestError(QNetworkReply::NetworkError err)
+{
+    processing = false;
+    qInfo() << "TransactionSync request error";
 }
 
 std::string TransactionSync::SyncWait(Context* ctx, TransactionStore* store, std::string address)

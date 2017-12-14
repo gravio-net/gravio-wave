@@ -33,6 +33,7 @@ public slots:
     void slotError(QNetworkReply::NetworkError);
 signals:
     void RequestComplete(QByteArray arr);
+    void RequestError(QNetworkReply::NetworkError);
 
 private:
     QNetworkAccessManager *manager;
@@ -51,16 +52,18 @@ class TransactionSync : public QObject
     Q_OBJECT
 public:
 
-    TransactionSync(Context* c, DataSync* s);
+    TransactionSync(Context* c, DataSync* s, TransactionStore* store);
     virtual ~TransactionSync(){}
     std::string SyncWait(Context* ctx, TransactionStore* store, std::string address);
 public slots:
     void StartSync();
     void RequestFinished(QByteArray arr);
+    void RequestError(QNetworkReply::NetworkError);
 private:
 
     Context* ctx;
     DataSync* sync;
+    TransactionStore* store;
     QTimer* timer;
     bool processing;
     ProcessState state;

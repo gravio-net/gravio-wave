@@ -7,7 +7,7 @@
 
 using namespace gravio::wave::backend;
 
-Wallet::Wallet(const Currency::Type & t):ctx(t), txstore(&ctx, &keystore), sync(),txsync(&ctx, &sync)
+Wallet::Wallet(const Currency::Type & t):ctx(t), txstore(&ctx, &keystore), sync(),txsync(&ctx, &sync, &txstore)
 {
     ctx.CreateSign();
     qInfo() << "Starting wallet";
