@@ -35,9 +35,9 @@ Rectangle
     {
         id: videoOutput
         source: cameraDevice
-        focus : visible // to receive focus and capture key events when visible
+        focus : true // to receive focus and capture key events when visible
         anchors.fill: parent
-        fillMode: VideoOutput.PreserveAspectFit
+        fillMode: VideoOutput.PreserveAspectCrop
         autoOrientation: true
 
         // autofocus area positions

@@ -1,5 +1,5 @@
-#ifndef TRANSACTION_H
-#define TRANSACTION_H
+#ifndef TRANSACTIONSTORE_H
+#define TRANSACTIONSTORE_H
 
 #include "context.h"
 #include "cryptoaddress.h"
@@ -32,4 +32,4 @@ private:
     std::map<uint256, CTransaction> txlist;
 };
 
-#endif // TRANSACTION_H
+#endif // TRANSACTIONSTORE_H

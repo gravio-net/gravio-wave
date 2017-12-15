@@ -63,7 +63,9 @@ DISTFILES += \
     qtquickcontrols2.conf \
     modules/modules.config \
     android/AndroidManifest.xml \
-    qml/account.qml
+    qml/account.qml \
+    qml/qqr.js \
+    qml/QRCode.qml
 
 HEADERS += \
     logger.h \
@@ -96,7 +98,10 @@ HEADERS += \
     wallet/utilstrencodings.h \
     wallet/primitives/transaction.h \
     wallet/amount.h \
-    wallet/version.h
+    wallet/version.h \
+    iaccount.h \
+    imoduleplugin.h \
+    iapplication.h
 
 RESOURCES += \
     qtquickcontrols2.conf

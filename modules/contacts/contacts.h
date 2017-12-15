@@ -4,6 +4,7 @@
 #include <QQuickItem>
 #include <QAbstractListModel>
 #include <QList>
+#include <QQmlApplicationEngine>
 
 #include "contact.h"
 #include "contactsdb.h"
@@ -49,7 +50,10 @@ public:
         return QVariant::fromValue(lContact);
     }
     Q_INVOKABLE void update() { db_->saveAll(); }
-    Q_INVOKABLE QVariant get(int index) { return QVariant::fromValue(contacts_.at(index)); }
+    Q_INVOKABLE QVariant get(int index)
+    {
+        return QVariant::fromValue(contacts_.at(index));
+    }
     Q_INVOKABLE QString removeContact(int index);
     Q_INVOKABLE void applyFilter(QString);
     Q_INVOKABLE void resetFilter();

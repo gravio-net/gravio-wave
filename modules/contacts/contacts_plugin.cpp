@@ -19,3 +19,8 @@ void ContactsPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 
     engine->rootContext()->setContextProperty("contactsModel", &contacts_);
 }
+
+void ContactsPlugin::initializeModule(gravio::wave::IAccount*)
+{
+
+}

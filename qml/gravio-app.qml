@@ -350,6 +350,9 @@ ApplicationWindow
         {
             var lModule = null;
 
+            // check
+            if (stackView.currentItem.moduleName == name) return;
+
             // deactivate current module - unsubscribe from toolbar actions & etc.
             stackView.currentItem.moduleDeactivate();
 

@@ -206,6 +206,8 @@ Contact::Contact(QObject *parent): QObject(parent)
     customAvatar_ = false;
     addresses_ = new ContactAddresses(this, parent);
     contactInfoBacked_.loadFromString(L"{}");
+
+    QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
 }
 
 Contact::~Contact()

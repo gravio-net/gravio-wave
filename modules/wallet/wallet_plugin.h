@@ -2,10 +2,10 @@
 
 #include <QQmlExtensionPlugin>
 
-#include "contacts.h"
+#include "wallets.h"
 #include "../../imoduleplugin.h"
 
-class ContactsPlugin : public QQmlExtensionPlugin, public gravio::wave::IModulePlugin
+class WalletPlugin : public QQmlExtensionPlugin, public gravio::wave::IModulePlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
@@ -16,5 +16,5 @@ public:
     void initializeModule(gravio::wave::IAccount*) override;
 
 private:
-    gravio::wave::Contacts contacts_;
+    gravio::wave::Wallets wallets_;
 };

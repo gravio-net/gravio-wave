@@ -5,6 +5,7 @@
 #include <QList>
 #include <QAbstractListModel>
 #include <QQuickItem>
+#include <QQmlApplicationEngine>
 
 #include "../../currency.h"
 #include "../../json.h"
@@ -31,8 +32,14 @@ class ContactAddress : public QObject
     Q_PROPERTY(bool primary READ primary WRITE setPrimary NOTIFY primaryAddressChanged)
 
 public:
-    ContactAddress(QObject *parent = 0): QObject(parent) { }
-    ContactAddress(Currency::Type type, QString address, QString label, bool primary): type_(type), address_(address), label_(label), primary_(primary) {}
+    ContactAddress(QObject *parent = 0): QObject(parent)
+    {
+        QQmlApplicationEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
+    }
+    ContactAddress(Currency::Type type, QString address, QString label, bool primary): type_(type), address_(address), label_(label), primary_(primary)
+    {
+        QQmlApplicationEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
+    }
 
     void setAddress(const QString& address) { address_ = address; emit addressChanged(); }
     QString address() const { return address_; }

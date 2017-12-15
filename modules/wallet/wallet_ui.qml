@@ -1,25 +1,51 @@
 import QtQuick 2.6
 import QtQuick.Controls 2.0
 
+import net.gravio.wave.modules.wallet 1.0
+
 Page
 {
     id: page
 
-    default property alias content: pane.contentItem
-
-    Flickable
+    SwipeView
     {
+        id: walletsSwipeView
+
         anchors.fill: parent
-        contentHeight: pane.implicitHeight
-        flickableDirection: Flickable.AutoFlickIfNeeded
+        currentIndex: 0
+    }
 
-        Pane
+    PageIndicator
+    {
+        id: indicator
+        //y: 60
+
+        count: walletsSwipeView.count
+        currentIndex: walletsSwipeView.currentIndex
+
+        anchors.bottom: page.top
+        anchors.horizontalCenter: parent.horizontalCenter
+    }
+
+    function open()
+    {
+        if (!initialized)
         {
-            id: pane
-            width: parent.width
-        }
+            console.log("Creating UI...");
+            for (var lIdx = 0; lIdx < walletsModel.count(); lIdx++)
+            {
+                var lWallet = walletsModel.get(lIdx);
 
-        ScrollIndicator.vertical: ScrollIndicator { }
+                console.log("Opening wallet " + lWallet.addressType());
+                var lComponent = Qt.createComponent("wallet_instance.qml");
+                var lWalletInstance = lComponent.createObject(page);
+
+                lWalletInstance.open(lWallet);
+                walletsSwipeView.addItem(lWalletInstance);
+            }
+
+            initialized = true;
+        }
     }
 
     //
@@ -35,10 +61,13 @@ Page
         console.log("[Wallet/moduleActivate]: fired");
 
         moduleName = moduleInfo.name;
+
+        open();
     }
 
     //
     // common module properties
     //
     property string moduleName;
+    property bool initialized;
 }

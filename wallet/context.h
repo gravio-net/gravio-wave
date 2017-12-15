@@ -9,6 +9,8 @@
 
 #define MESSAGE_START_SIZE 4
 
+#include <QString>
+
 using namespace gravio::wave;
 
 class Context
@@ -35,12 +37,20 @@ public:
     std::string TransactionUrl() const { return tx_url; }
     Currency::Type getType() { return type; }
 
+    int confirmations() { return confirmations_; }
+    QString unitName(Currency::Unit unit);
+    QString unitDescription(Currency::Unit unit);
+    qint64 unitFactor(Currency::Unit unit);
+    int unitDecimals(Currency::Unit unit);
+    int64_t unitMaxMoney();
+
 private:
     Currency::Type type;
 
     secp256k1_context* secp256k1_context_sign = NULL;
 
     int nDefaultPort;
+    int confirmations_;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
     MessageStartChars pchMessageStart;
 

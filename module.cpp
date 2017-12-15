@@ -9,6 +9,7 @@
 
 #include "module.h"
 #include "exception.h"
+#include "imoduleplugin.h"
 
 using namespace gravio::wave;
 
@@ -128,7 +129,7 @@ bool ModuleWrapper::isLoaded() const
 
 int ModuleWrapper::load()
 {
-    return instance_.load(profile(), name(), engine_);
+    return instance_.load(profile(), name(), application_);
 }
 
 QString ModuleWrapper::modulePath() const
@@ -202,7 +203,7 @@ bool ModuleInstance::isExecutable(QString& fileName)
     return false;
 }
 
-int ModuleInstance::load(const QString& profile, const QString& name, QQmlApplicationEngine* engine)
+int ModuleInstance::load(const QString& profile, const QString& name, IApplication* application)
 {
     if (loaded_) return 1;
 
@@ -249,8 +250,12 @@ int ModuleInstance::load(const QString& profile, const QString& name, QQmlApplic
             QObject *lModule = lLoader.instance();
             if (lModule)
             {
-                ((QQmlExtensionPlugin*)lModule)->initializeEngine(engine, ""); // preload module instance
+                ((QQmlExtensionPlugin*)lModule)->initializeEngine(application->getEngine(), ""); // preload module instance
                 ((QQmlExtensionPlugin*)lModule)->registerTypes(""); // register module classes
+
+                IModulePlugin* lMetaModule = dynamic_cast<gravio::wave::IModulePlugin*>(lModule);
+                lMetaModule->initializeModule(application->getAccount());
+
                 lFound = true;
             }
         }

@@ -642,16 +642,18 @@ Page
 
                                         property bool rounded: true
                                         property bool adapt: true
+                                        property int displayWidth: 128
+                                        property int displayHeight: 128
 
                                         //mipmap: true // smoothing
 
                                         Rectangle
                                         {
                                             id: imageContainer
-                                            x: (-1 * contactAvatarImage.width/2) //avatarBar.width / 2 - contactAvatarImage.width
-                                            y: -80 //-80
-                                            width: contactAvatarImage.width * 2
-                                            height: avatarBar.height * 2
+                                            x: 0
+                                            y: 0
+                                            width: contactAvatarImage.displayWidth
+                                            height: contactAvatarImage.displayHeight
                                             color: "transparent"
 
                                             // camera proxy
@@ -705,9 +707,9 @@ Page
                                            }
                                         }
 
-                                        x: avatarBar.width / 2 - contactAvatarImage.width / 2
-                                        width: 128
-                                        height: 128
+                                        x: avatarBar.width / 2 - contactAvatarImage.displayWidth / 2
+                                        width: contactAvatarImage.displayWidth
+                                        height: contactAvatarImage.displayHeight
                                         fillMode: Image.PreserveAspectCrop
 
                                         source: contactDialog.contact.avatarSource()
@@ -717,15 +719,15 @@ Page
                                         {
                                             maskSource: Item
                                             {
-                                                width: contactAvatarImage.width
-                                                height: contactAvatarImage.height
+                                                width: contactAvatarImage.displayWidth
+                                                height: contactAvatarImage.displayHeight
 
                                                 Rectangle
                                                 {
                                                     anchors.centerIn: parent
-                                                    width: contactAvatarImage.adapt ? contactAvatarImage.width : Math.min(contactAvatarImage.width, contactAvatarImage.height)
-                                                    height: contactAvatarImage.adapt ? contactAvatarImage.height : width
-                                                    radius: Math.min(width, height)
+                                                    width: contactAvatarImage.displayWidth
+                                                    height: contactAvatarImage.displayHeight
+                                                    radius: contactAvatarImage.displayWidth
                                                 }
                                             }
                                         }

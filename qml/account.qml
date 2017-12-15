@@ -7,6 +7,7 @@ import QtGraphicalEffects 1.0
 import Qt.labs.folderlistmodel 2.1
 import QtMultimedia 5.8
 
+import net.gravio.wave.helpers 1.0
 import net.gravio.wave.account 1.0
 
 Item
@@ -40,7 +41,7 @@ Item
         onAccepted:
         {
             var lError = "";
-            if (addressDialog.accountAddress == null /*add new address*/)
+            if (addressDialog.accountAddress == null)
             {
                 lError = addressDialog.addresses.addAddress(addressTypeCombo.currentText, labelEdit.text, primaryEdit.checked);
             }
@@ -73,6 +74,7 @@ Item
             labelEdit.text = "";
             primaryEdit.checked = false;
             addressDialogCurrencyIcon.source = "images/black/info.png";
+            qrCodeEdit.visible = false;
 
             addressDialog.addresses = addresses;
             addressDialog.open();
@@ -80,6 +82,7 @@ Item
 
         function editAddress(accountAddress, addresses)
         {
+            console.log(accountAddress);
             addressDialog.title = "Edit address";
             addressDialog.accountAddress = accountAddress;
             addressTypeCombo.enabled = false;
@@ -89,6 +92,9 @@ Item
             labelEdit.text = labelEdit.getLabel();
             primaryEdit.checked = primaryEdit.getPrimary();
             addressDialogCurrencyIcon.source = addressDialogCurrencyIcon.getIcon();
+
+            qrCodeEdit.visible = true;
+            qrCodeEdit.setInfo(addressEdit.getAddress());
 
             addressDialog.addresses = addresses;
             addressDialog.open();
@@ -120,6 +126,29 @@ Item
                         if(value === undefined)
                             return (addressDialog.accountAddress != null) ? "images/black/" + addressDialog.accountAddress.originalAddressType + ".png" : "";
                         return "images/black/" + value + ".png";
+                    }
+                }
+
+                ToolButton
+                {
+                    id: copyAddressButton
+                    x: addressDialog.width - addressDialogCurrencyIcon.width - 60 //addressTypeCombo.width
+                    y: -14
+                    contentItem: Image
+                    {
+                        id: copyAddressButtonImage
+                        fillMode: Image.Pad
+                        horizontalAlignment: Image.AlignHCenter
+                        verticalAlignment: Image.AlignVCenter
+                        source: "images/black/editcopy.png"
+                    }
+                    Clipboard
+                    {
+                        id: clipboard
+                    }
+                    onClicked:
+                    {
+                        clipboard.setText(addressEdit.getAddress());
                     }
                 }
             }
@@ -175,6 +204,7 @@ Item
             }
             Rectangle
             {
+                id: addressEditRecangle
                 y: addressTypeCombo.height + 10
                 TextField
                 {
@@ -184,11 +214,13 @@ Item
                     width: addressDialog.width - 50
                     font.pixelSize: 14
                     readOnly: true
+                    selectByMouse: true
 
                     function getAddress()
                     {
                         return (addressDialog.accountAddress != null) ? addressDialog.accountAddress.address : "";
                     }
+
                 }
             }
             Rectangle
@@ -222,6 +254,32 @@ Item
                     {
                         return (addressDialog.accountAddress != null) ? addressDialog.accountAddress.primary : false;
                     }
+                }
+            }
+            Rectangle
+            {
+                id: qrCodeEdit
+                y: addressTypeCombo.height + 10 + addressEdit.height + 10 + labelEdit.height + 10 + primaryEdit.height + 10
+                x: (addressDialog.width-20) / 2 - 85
+
+                property variant qrCode;
+
+                function setInfo(info)
+                {
+                    qrCode.value = info;
+                }
+
+                Component.onCompleted:
+                {
+                    //
+                    // create dialog
+                    //
+
+                    var lComponent = Qt.createComponent("qrcode.qml");
+                    qrCode = lComponent.createObject(qrCodeEdit);
+                    qrCode.width = 170;
+                    qrCode.height = 170;
+                    qrCode.value = addressEdit.getAddress();
                 }
             }
         }
@@ -330,7 +388,7 @@ Item
                                             else if (camera.cameraState() == Camera.ActiveState) // take a shot
                                             {
                                                 cancelPhotoButton.visible = false;
-                                                camera.captureToLocation(page.module.moduleDataPath);
+                                                camera.captureToLocation(gravioAccount.avatarSourceFolder());
                                             }
                                         }
                                     }
@@ -372,16 +430,21 @@ Item
 
                                         property bool rounded: true
                                         property bool adapt: true
+                                        property int displayWidth: 128
+                                        property int displayHeight: 128
 
                                         //mipmap: true // smoothing
 
                                         Rectangle
                                         {
                                             id: imageContainer
-                                            x: (-1 * accountAvatarImage.width/2)
-                                            y: -80
-                                            width: accountAvatarImage.width * 2
-                                            height: avatarBar.height * 2
+                                            x: 0 //(-1 * accountAvatarImage.width/2)
+                                            y: 0 //-80
+                                            //width: accountAvatarImage.width * 2
+                                            //height: avatarBar.height * 2
+                                            width: accountAvatarImage.displayWidth
+                                            height: accountAvatarImage.displayHeight
+
                                             color: "transparent"
 
                                             // camera proxy
@@ -436,8 +499,8 @@ Item
                                         }
 
                                         x: avatarBar.width / 2 - accountAvatarImage.width / 2
-                                        width: 128
-                                        height: 128
+                                        width: accountAvatarImage.displayWidth
+                                        height: accountAvatarImage.displayHeight
                                         fillMode: Image.PreserveAspectCrop
 
                                         source: gravioAccount.avatarSource()
@@ -447,15 +510,15 @@ Item
                                         {
                                             maskSource: Item
                                             {
-                                                width: accountAvatarImage.width
-                                                height: accountAvatarImage.height
+                                                width: accountAvatarImage.displayWidth
+                                                height: accountAvatarImage.displayHeight
 
                                                 Rectangle
                                                 {
                                                     anchors.centerIn: parent
-                                                    width: accountAvatarImage.adapt ? accountAvatarImage.width : Math.min(accountAvatarImage.width, accountAvatarImage.height)
-                                                    height: accountAvatarImage.adapt ? accountAvatarImage.height : width
-                                                    radius: Math.min(width, height)
+                                                    width: accountAvatarImage.displayWidth
+                                                    height: accountAvatarImage.displayHeight
+                                                    radius: accountAvatarImage.displayWidth
                                                 }
                                             }
                                         }
@@ -525,8 +588,12 @@ Item
                                         onClicked:
                                         {
                                             var lComponent = Qt.createComponent("modules/contacts/filedialog.qml");
-                                            var lFileDialog = lComponent.createObject(page);
+                                            var lFileDialog = lComponent.createObject(window /*main window*/);
 
+                                            lFileDialog.x = accountDialog.x;
+                                            lFileDialog.y = accountDialog.y;
+                                            lFileDialog.width = accountDialog.width;
+                                            lFileDialog.height = accountDialog.height;
                                             lFileDialog.selectPicture(chooseAvatarButton);
                                         }
 
@@ -767,7 +834,7 @@ Item
                                                         anchors.fill: removeRect
                                                         onClicked:
                                                         {
-                                                            gravioAccount.addresses.removeAddress(index);
+                                                            //gravioAccount.addresses.removeAddress(index);
                                                         }
                                                     }
                                                 }
@@ -800,7 +867,7 @@ Item
                                             onClicked:
                                             {
                                                 addressesView.currentIndex = index;
-                                                //console.log(index);
+                                                console.log(index);
                                                 addressDialog.editAddress(gravioAccount.addresses.get(index), gravioAccount.addresses);
                                             }
                                         }

@@ -6,6 +6,11 @@
 
 using namespace gravio::wave;
 
+ClipboardAdapter::ClipboardAdapter(QObject *parent) : QObject(parent)
+{
+    clipboard_ = QGuiApplication::clipboard();
+}
+
 int Application::load()
 {
     try
@@ -42,7 +47,7 @@ int Application::load()
                 try
                 {
                     json::Value lModule = lModules[lIdx];
-                    const ModuleWrapper& lWrapper = modules_.addModule(ModuleWrapper(lModule, &engine_));
+                    const ModuleWrapper& lWrapper = modules_.addModule(ModuleWrapper(lModule, this));
 
                     if (lWrapper.autoload() && !lWrapper.isLoaded())
                     {
@@ -77,6 +82,7 @@ int Application::execute()
     qmlRegisterType<gravio::wave::Account>("net.gravio.wave.account", 1, 0, "Account");
     qmlRegisterType<gravio::wave::AccountAddress>("net.gravio.wave.account", 1, 0, "AccountAddress");
     qmlRegisterType<gravio::wave::AccountAddresses>("net.gravio.wave.account", 1, 0, "AccountAddresses");
+    qmlRegisterType<gravio::wave::ClipboardAdapter>("net.gravio.wave.helpers", 1, 0, "Clipboard");
 
     engine_.rootContext()->setContextProperty("gravioApp", this);
     engine_.rootContext()->setContextProperty("gravioAccount", &account_);

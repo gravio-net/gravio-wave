@@ -6,10 +6,12 @@
 #include <QAbstractListModel>
 #include <QQuickItem>
 #include <QMap>
+#include <QQmlApplicationEngine>
 
 #include "currency.h"
 #include "json.h"
 #include "wallet/walletstore.h"
+#include "iaccount.h"
 
 namespace gravio {
 namespace wave {
@@ -18,7 +20,7 @@ namespace wave {
  * @brief The AddressKey facade class
  * Holds currency address (key/pubKey)
  */
-class AddressKey
+class AddressKey: public IAddressKey
 {
 public:
     AddressKey(Context* context) : context_(context), type_(context->getType()), key_(context)
@@ -57,7 +59,7 @@ private:
  * @brief The AddressKeyFactory facade class
  * Produces new AddressKey
  */
-class AddressKeyFactory
+class AddressKeyFactory: public IAddressKeyFactory
 {
 public:
     AddressKeyFactory(Currency::Type type) : type_(type), ctx_(type) {}
@@ -65,8 +67,14 @@ public:
 
     AddressKey* newKey();
 
-    QList<AddressKey*> keys() { return keys_; }
+    QList<IAddressKey*> keys() { return keys_; }
     Currency::Type type() { return type_; }
+    int confirmations() { return ctx_.confirmations(); }
+    QString unitName(Currency::Unit number) { return QString::fromStdString(ctx_.unitName(number)); }
+    QString unitDescription(Currency::Unit number) { return QString::fromStdString(ctx_.unitDescription(number)); }
+    qint64 unitFactor(Currency::Unit unit) { return ctx_.unitFactor(unit); }
+    int unitDecimals(Currency::Unit unit) { return ctx_.unitDecimals(unit); }
+    int64_t unitMaxMoney() { return ctx_.unitMaxMoney(); }
 
     void fromJSON(json::Value&);
     void toJSON(json::Value&);
@@ -76,7 +84,7 @@ public:
 private:
     Currency::Type type_;
     Context ctx_;
-    QList<AddressKey*> keys_;
+    QList<IAddressKey*> keys_;
 };
 
 // forward declaration
@@ -97,8 +105,15 @@ class AccountAddress : public QObject
     Q_PROPERTY(bool primary READ primary WRITE setPrimary NOTIFY primaryAddressChanged)
 
 public:
-    AccountAddress(QObject *parent = 0): QObject(parent) { key_ = 0; }
-    AccountAddress(Currency::Type type, AddressKey* key, bool hideAddressType): key_(key), type_(type) { hideAddressType_ = hideAddressType; }
+    AccountAddress(QObject *parent = 0): QObject(parent)
+    {
+        key_ = 0; QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
+    }
+    AccountAddress(Currency::Type type, AddressKey* key, bool hideAddressType): key_(key), type_(type)
+    {
+        hideAddressType_ = hideAddressType; QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
+    }
+    ~AccountAddress();
 
     QString address()
     {
@@ -163,7 +178,7 @@ public:
     QHash<int, QByteArray> roleNames() const;
     QList<AccountAddress*> getList() { return addresses_; }
 
-    Q_INVOKABLE QVariant get(int idx) { return QVariant::fromValue(addresses_.at(idx)); }
+    Q_INVOKABLE QVariant get(int idx);
 
     void fromJSON(json::Value&);
     void toJSON(json::Value&);
@@ -176,6 +191,7 @@ public:
     Q_INVOKABLE QString refetchModel();
 
     AddressKeyFactory* getAddressFactory(Currency::Type type);
+    QList<Currency::Type> getAddressTypes();
 
     void clear();
 
@@ -196,7 +212,7 @@ private:
  * Account information: attributes, addresses & etc.
  */
 class AccountDb;
-class Account : public QObject
+class Account : public QObject, public IAccount
 {
     Q_OBJECT
 
@@ -242,7 +258,8 @@ public:
     Q_INVOKABLE void open(QString);
 
     //
-    AddressKeyFactory* getAddressFactory(Currency::Type type) { return addresses_->getAddressFactory(type); }
+    QList<Currency::Type> getAddressTypes() { return addresses_->getAddressTypes(); }
+    IAddressKeyFactory* getAddressFactory(Currency::Type type) { return addresses_->getAddressFactory(type); }
 
 signals:
     void nameChanged();

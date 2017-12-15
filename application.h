@@ -15,6 +15,7 @@
 #include <QQuickStyle>
 
 #include <QQuickItem>
+#include <QClipboard>
 
 #ifdef Q_OS_ANDROID
 #include <QAndroidJniObject>
@@ -23,6 +24,7 @@
 #include "json.h"
 #include "module.h"
 #include "account.h"
+#include "iapplication.h"
 
 /**
  * @brief Modules and app configuration
@@ -83,11 +85,27 @@ public:
     }
 };
 
+class ClipboardAdapter : public QObject
+{
+    Q_OBJECT
+public:
+    explicit ClipboardAdapter(QObject *parent = 0);
+
+    Q_INVOKABLE void setText(QString text)
+    {
+        clipboard_->setText(text, QClipboard::Clipboard);
+        clipboard_->setText(text, QClipboard::Selection);
+    }
+
+private:
+    QClipboard* clipboard_;
+};
+
 /**
  * @brief The Application class
  * Entry point to the gravio.app
  */
-class Application : public QQuickItem
+class Application : public QQuickItem, public IApplication
 {
     Q_OBJECT
 
@@ -132,6 +150,9 @@ public:
         return lList;
 #endif
     }
+
+    QQmlApplicationEngine* getEngine() { return &engine_; }
+    IAccount* getAccount() { return &account_; }
 
 private:
     QGuiApplication& app_;

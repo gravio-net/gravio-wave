@@ -14,6 +14,7 @@
 #include <set>
 
 #include "json.h"
+#include "iapplication.h"
 
 namespace gravio {
 namespace wave {
@@ -63,7 +64,7 @@ public:
     ModuleInstance() : name_("default"), loaded_(false) {}
 
     bool isLoaded() const { return loaded_; }
-    int load(const QString& profile, const QString& name, QQmlApplicationEngine* engine);
+    int load(const QString& profile, const QString& name, IApplication* application);
 
 private:
     QString prepareBin(const QString&);
@@ -81,7 +82,7 @@ private:
 class ModuleWrapper
 {
 public:
-    ModuleWrapper(json::Value& config, QQmlApplicationEngine* engine): config_(config), engine_(engine) {}
+    ModuleWrapper(json::Value& config, IApplication* application): config_(config), application_(application) {}
 
     QString name() const;
     QString caption() const;
@@ -108,7 +109,7 @@ public:
 private:
     json::Value config_;
     ModuleInstance instance_;
-    QQmlApplicationEngine* engine_;
+    IApplication* application_;
 };
 
 

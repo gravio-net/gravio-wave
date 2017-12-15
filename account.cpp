@@ -87,10 +87,17 @@ void AddressKeyFactory::toJSON(json::Value& root)
 
     for(int lIdx = 0; lIdx < keys_.size(); lIdx++)
     {
-        AddressKey* lKey = keys_[lIdx];
+        AddressKey* lKey = (AddressKey*)keys_[lIdx];
         json::Value lItem = lList.newArrayItem();
         lKey->toJSON(lItem);
     }
+}
+
+//
+// AccountAddress
+//
+AccountAddress::~AccountAddress()
+{
 }
 
 //
@@ -98,12 +105,12 @@ void AddressKeyFactory::toJSON(json::Value& root)
 //
 AccountAddresses::AccountAddresses(QObject *parent): QAbstractListModel(parent), account_(0)
 {
-
+    QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
 }
 
 AccountAddresses::AccountAddresses(Account* account, QObject *parent): QAbstractListModel(parent), account_(account)
 {
-
+    QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
 }
 
 AccountAddresses::~AccountAddresses()
@@ -186,7 +193,7 @@ void AccountAddresses::makeAddresses()
         AddressKeyFactory* lFactory = factories_.values()[lIdx];
         for(int lAddrIdx = 0; lAddrIdx < lFactory->keys().size(); lAddrIdx++)
         {
-            AddressKey* lKey = lFactory->keys()[lAddrIdx];
+            AddressKey* lKey = (AddressKey*)lFactory->keys()[lAddrIdx];
 
             AccountAddress* lAddress = new AccountAddress(lKey->type(), lKey, !lFirst);
             addresses_.push_back(lAddress);
@@ -277,6 +284,21 @@ AddressKeyFactory* AccountAddresses::getAddressFactory(Currency::Type type)
     return 0;
 }
 
+QVariant AccountAddresses::get(int idx)
+{
+    if (idx < addresses_.size())
+    {
+        return QVariant::fromValue(addresses_.at(idx));
+    }
+
+    return QVariant();
+}
+
+QList<Currency::Type> AccountAddresses::getAddressTypes()
+{
+    return factories_.keys();
+}
+
 //
 // Account
 //
@@ -288,6 +310,8 @@ Account::Account(QObject *parent): QObject(parent)
     customAvatar_ = false;
     addresses_ = new AccountAddresses(this, parent);
     accountInfoBacked_.loadFromString(L"{}");
+
+    QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
 }
 
 Account::~Account()
