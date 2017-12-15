@@ -29,6 +29,11 @@ public:
         return ctx;
     }
     std::map<uint256, CTransaction> GetTransactions(){ return txstore.GetTransactions(); }
+
+signals:
+    void newTransaction(uint256);
+    void blockCountUpdated(uint64_t);
+
 private:
     IAddressKeyFactory* factory;
     Context* ctx;
