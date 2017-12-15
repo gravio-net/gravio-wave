@@ -7,6 +7,16 @@
 
 using namespace gravio::wave::backend;
 
+TransactionStore::TransactionStore() : ctx(0)
+{
+
+}
+
+TransactionStore::TransactionStore(Context* c, KeyStore* k) : ctx(c), keystore(k)
+{
+
+}
+
 bool TransactionStore::HasTx(std::string txid)
 {
     uint256 id;
