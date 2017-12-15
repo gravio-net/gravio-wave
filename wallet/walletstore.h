@@ -8,14 +8,20 @@
 #include "key.h"
 #include "transactionstore.h"
 #include "cryptoaddress.h"
+#include "sync.h"
 #include <list>
 
-using namespace gravio::wave;
+namespace gravio {
+namespace wave {
+namespace backend {
 
-class Wallet
+
+class Wallet: public QObject
 {
+    //Q_OBJECT
 public:
-    Wallet(const Currency::Type&);
+    Wallet(const Currency::Type & t = Currency::GIO);
+    virtual ~Wallet() {}
     Key NewKey();
     void SetKey(Key& k);
     void AddPubKey(PubKey& pk);
@@ -27,13 +33,19 @@ private:
     Context ctx;
     KeyStore keystore;
     TransactionStore txstore;
+    DataSync sync;
+    TransactionSync txsync;
 };
 
-class WalletStore
+/*class WalletStore
 {
 public:
     WalletStore();
     Wallet NewWallet(const Currency::Type& t = Currency::GIO);
-};
+};*/
+
+} //backend
+} // wave
+} // gravio
 
 #endif // WALLETSTORE_H

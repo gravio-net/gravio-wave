@@ -5,25 +5,12 @@
 #include <string>
 #include <vector>
 
-Transaction::Transaction()
-{
-
-}
-
-TransactionStore::TransactionStore() : ctx(0)
-{
-
-}
-
-TransactionStore::TransactionStore(Context* c, KeyStore* k) : ctx(c), keystore(k)
-{
-
-}
+using namespace gravio::wave::backend;
 
 bool TransactionStore::HasTx(std::string txid)
 {
-    std::vector<unsigned char> hash = ParseHex(txid);
-    uint256 id(hash);
+    uint256 id;
+    id.SetHex(txid);
     if(txlist.find(id) != txlist.end())
         return true;
     return false;

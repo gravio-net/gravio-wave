@@ -16,6 +16,8 @@
 #include <sys/time.h>
 #endif
 
+using namespace gravio::wave::backend;
+
 int64_t GetPerformanceCounter()
 {
     int64_t nCounter = 0;

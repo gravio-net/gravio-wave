@@ -8,10 +8,11 @@
 #include "../currency.h"
 
 #define MESSAGE_START_SIZE 4
-
 #include <QString>
 
-using namespace gravio::wave;
+namespace gravio {
+namespace wave {
+namespace backend {
 
 class Context
 {
@@ -35,6 +36,7 @@ public:
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     std::string TransactionsListUrl() const { return tx_list_url; }
     std::string TransactionUrl() const { return tx_url; }
+    std::string BlockCountUrl() const { return block_count_url; }
     Currency::Type getType() { return type; }
 
     int confirmations() { return confirmations_; }
@@ -56,6 +58,11 @@ private:
 
     std::string tx_list_url;
     std::string tx_url;
+    std::string block_count_url;
 };
+
+} // backend
+} // wave
+} // gravio
 
 #endif // CONTEXT_H

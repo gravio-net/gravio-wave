@@ -23,7 +23,7 @@ namespace wave {
 class AddressKey: public IAddressKey
 {
 public:
-    AddressKey(Context* context) : context_(context), type_(context->getType()), key_(context)
+    AddressKey(backend::Context* context) : context_(context), type_(context->getType()), key_(context)
     {
         primary_ = false; label_ = "";
     }
@@ -34,11 +34,11 @@ public:
     void fromJSON(json::Value&);
     void toJSON(json::Value&);
 
-    Key& key() { return key_; }
-    PubKey& pubKey() { return pubKey_; }
+    backend::Key& key() { return key_; }
+    backend::PubKey& pubKey() { return pubKey_; }
 
     Currency::Type type() { return type_; }
-    Context* context() { return context_; }
+    backend::Context* context() { return context_; }
 
     bool primary() { return primary_; }
     void setPrimary(bool primary) { primary_ = primary; }
@@ -47,10 +47,10 @@ public:
     void setLabel(QString label) { label_ = label; }
 
 private:
-    Context* context_;
+    backend::Context* context_;
     Currency::Type type_;
-    Key key_;
-    PubKey pubKey_;
+    backend::Key key_;
+    backend::PubKey pubKey_;
     QString label_;
     bool primary_;
 };
@@ -70,8 +70,8 @@ public:
     QList<IAddressKey*> keys() { return keys_; }
     Currency::Type type() { return type_; }
     int confirmations() { return ctx_.confirmations(); }
-    QString unitName(Currency::Unit number) { return QString::fromStdString(ctx_.unitName(number)); }
-    QString unitDescription(Currency::Unit number) { return QString::fromStdString(ctx_.unitDescription(number)); }
+    QString unitName(Currency::Unit number) { return ctx_.unitName(number); }
+    QString unitDescription(Currency::Unit number) { return ctx_.unitDescription(number); }
     qint64 unitFactor(Currency::Unit unit) { return ctx_.unitFactor(unit); }
     int unitDecimals(Currency::Unit unit) { return ctx_.unitDecimals(unit); }
     int64_t unitMaxMoney() { return ctx_.unitMaxMoney(); }
@@ -83,7 +83,7 @@ public:
 
 private:
     Currency::Type type_;
-    Context ctx_;
+    backend::Context ctx_;
     QList<IAddressKey*> keys_;
 };
 
@@ -120,7 +120,7 @@ public:
         if (!address_.length())
         {
             uint160 lId = key_->pubKey().GetID();
-            CryptoAddress lAddress(key_->context(), lId);
+            backend::CryptoAddress lAddress(key_->context(), lId);
 
             std::string lAddressStr = lAddress.ToString();
             address_ = QString::fromStdString(lAddressStr);

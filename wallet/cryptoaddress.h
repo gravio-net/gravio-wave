@@ -8,6 +8,10 @@
 #include "script/script.h"
 #include "context.h"
 
+namespace gravio {
+namespace wave {
+namespace backend {
+
 /**
  * Base class for all base58-encoded data
  */
@@ -50,5 +54,9 @@ public:
 private:
     Context* ctx;
 };
+
+} //backend
+} // wave
+} // gravio
 
 #endif // CRYPTOADDRESS_H

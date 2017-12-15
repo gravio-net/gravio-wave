@@ -1,12 +1,16 @@
 #include "walletstore.h"
 #include <stdio.h>
 #include <string.h>
+#include <QFile>
+#include "application.h"
+#include "exception.h"
 
-using namespace gravio::wave;
+using namespace gravio::wave::backend;
 
-Wallet::Wallet(const Currency::Type & t = Currency::GIO):ctx(t), txstore(&ctx, &keystore)
+Wallet::Wallet(const Currency::Type & t):ctx(t), txstore(&ctx, &keystore), sync(),txsync(&ctx, &sync, &txstore)
 {
     ctx.CreateSign();
+    qInfo() << "Starting wallet";
 }
 
 Key Wallet::NewKey()
@@ -26,7 +30,7 @@ void Wallet::AddPubKey(PubKey& pk)
     keystore.AddPubKey(pk);
 }
 
-WalletStore::WalletStore()
+/*WalletStore::WalletStore()
 {
 
 }
@@ -34,4 +38,4 @@ WalletStore::WalletStore()
 Wallet WalletStore::NewWallet(const Currency::Type& t)
 {
     return Wallet(t);
-}
+}*/

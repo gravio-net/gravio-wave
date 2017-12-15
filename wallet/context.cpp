@@ -5,7 +5,7 @@
 #include "secp256k1/include/secp256k1.h"
 #include "secp256k1/include/secp256k1_ecdh.h"
 
-#include <QString>
+using namespace gravio::wave::backend;
 
 Context::Context(const Currency::Type& t = Currency::GIO)
 {
@@ -46,7 +46,10 @@ Context::Context(const Currency::Type& t = Currency::GIO)
         nDefaultPort = 23333;
         confirmations_ = 6;
         tx_list_url = "http://blockexplorer.gravio.net/ext/getaddress/";
+        // TODO: test?
+        //tx_list_url = "http://blockexplorer.gravio.net/ext/getaddress/2MepwNfMDN1u5yiUb1RtNcWnmK8TnQQdQBy";
         tx_url = "http://blockexplorer.gravio.net/api/getrawtransaction";
+        block_count_url = "http://blockexplorer.gravio.net/api/getblockcount";
         break;
     }
 

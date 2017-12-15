@@ -33,8 +33,8 @@ SOURCES += \
     ../../wallet/primitives/transaction.cpp \
     ../../wallet/amount.cpp \
     ../../wallet/uint256.cpp \
-    transaction.cpp \
-    transactions.cpp \
+    wallet_transaction.cpp \
+    wallet_transactions.cpp \
     units.cpp
 
 HEADERS += \
@@ -43,7 +43,7 @@ HEADERS += \
     wallet.h \
     wallets.h \
     ../../iaccount.h \
-    transaction.h \
+    wallet_transaction.h \
     ../../wallet/uint256.h \
     ../../wallet/walletstore.h \
     ../../wallet/compat/byteswap.h \
@@ -67,7 +67,8 @@ HEADERS += \
     ../../wallet/primitives/transaction.h \
     ../../wallet/amount.h \
     ../../wallet/version.h \
-    transactions.h \
+    ../../wallet/transactionstore.h \
+    wallet_transactions.h \
     units.h
 
 DISTFILES += \

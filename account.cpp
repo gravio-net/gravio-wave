@@ -55,7 +55,7 @@ AddressKey* AddressKeyFactory::newKey()
     AddressKey* lKey = new AddressKey(&ctx_);
     lKey->key().MakeNew(); // make new secret
 
-    PubKey lPubKey = lKey->key().GetPubKey(); // make new pubKey
+    backend::PubKey lPubKey = lKey->key().GetPubKey(); // make new pubKey
     lKey->pubKey().Set(lPubKey.begin(), lPubKey.end());
 
     keys_.push_back(lKey);
