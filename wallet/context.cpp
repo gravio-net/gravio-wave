@@ -47,7 +47,7 @@ Context::Context(const Currency::Type& t = Currency::GIO)
         confirmations_ = 6;
         tx_list_url = "http://blockexplorer.gravio.net/ext/getaddress/";
         // TODO: test?
-        //tx_list_url = "http://blockexplorer.gravio.net/ext/getaddress/2MepwNfMDN1u5yiUb1RtNcWnmK8TnQQdQBy";
+        //tx_list_url = "http://blockexplorer.gravio.net/ext/getaddress/";
         tx_url = "http://blockexplorer.gravio.net/api/getrawtransaction";
         block_count_url = "http://blockexplorer.gravio.net/api/getblockcount";
         break;

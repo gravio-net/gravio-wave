@@ -90,10 +90,19 @@ void DataSync::slotError(QNetworkReply::NetworkError err)
     ;
 }*/
 
-TransactionSync::TransactionSync(Context* c, DataSync* s, TransactionStore* st):ctx(c), sync(s), store(st)
+TransactionSync::TransactionSync(Context* c, DataSync* s, TransactionStore* st, IAddressKeyFactory* f):ctx(c), sync(s), store(st), factory(f)
 {
     timer = new QTimer(this);
     processing = false;
+
+    QList<IAddressKey*> keyslist = factory->keys();
+    for(QList<IAddressKey*>::iterator it = keyslist.begin(); it != keyslist.end(); it++)
+    {
+        PubKey pk = (*it)->pubKey();
+        uint160 id = pk.GetID();
+        CryptoAddress addr(ctx, id);
+        addresses.push_back(addr.ToString());
+    }
     connect(timer, SIGNAL(timeout()), this, SLOT(StartSync()));
     connect(sync, SIGNAL(RequestComplete(QByteArray)),
             this, SLOT(RequestFinished(QByteArray)));
@@ -108,6 +117,7 @@ void TransactionSync::StartSync()
     if(processing)
         return;
     processing = true;
+    addresses_queue = addresses;
     state = blocks_count;
     qInfo() << "start sync";
     Request r;
@@ -127,7 +137,9 @@ void TransactionSync::RequestFinished(QByteArray arr)
         store->SetBlocksCount(bc);
         state = txlist;
         Request r;
-        r.Url = ctx->TransactionsListUrl();
+        std::string addr = addresses_queue.front();
+        addresses_queue.pop_front();
+        r.Url = ctx->TransactionsListUrl() + addr;
         sync->SendRequest(r);
     }
     else if(state == txlist)
@@ -188,7 +200,17 @@ void TransactionSync::RequestFinished(QByteArray arr)
         }
         else
         {
-            processing = false;
+            if(addresses_queue.size())
+            {
+                state = txlist;
+                Request r;
+                std::string addr = addresses_queue.front();
+                addresses_queue.pop_front();
+                r.Url = ctx->TransactionsListUrl() + addr;
+                sync->SendRequest(r);
+            }
+            else
+                processing = false;
         }
     }
 }

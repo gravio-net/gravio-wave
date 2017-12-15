@@ -95,17 +95,6 @@ private:
     Context *ctx = NULL;
 };
 
-class KeyStore
-{
-public:
-    KeyStore();
-    void SetKey(Key& k);
-    void AddPubKey(PubKey& k);
-private:
-    Key key;
-    std::list<PubKey> pubkeys;
-};
-
 } //backend
 } // wave
 } // gravio

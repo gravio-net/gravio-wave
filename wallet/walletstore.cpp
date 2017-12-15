@@ -7,28 +7,30 @@
 
 using namespace gravio::wave::backend;
 
-Wallet::Wallet(const Currency::Type & t):ctx(t), txstore(&ctx, &keystore), sync(),txsync(&ctx, &sync, &txstore)
+Wallet::Wallet(IAddressKeyFactory* f)
 {
-    ctx.CreateSign();
+    txsync = 0;
+    factory = f;
+    ctx = factory->context();
+    txstore = TransactionStore(ctx);
+    txsync = new TransactionSync (ctx, &sync, &txstore, f);
+
     qInfo() << "Starting wallet";
+}
+
+Wallet::~Wallet()
+{
+    if(txsync)
+        delete txsync;
 }
 
 Key Wallet::NewKey()
 {
-    Key k(&ctx);
+    Key k(ctx);
     k.MakeNew();
     return k;
 }
 
-void Wallet::SetKey(Key& k)
-{
-    keystore.SetKey(k);
-}
-
-void Wallet::AddPubKey(PubKey& pk)
-{
-    keystore.AddPubKey(pk);
-}
 
 /*WalletStore::WalletStore()
 {

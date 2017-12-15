@@ -8,6 +8,7 @@
 #include <QNetworkReply>
 #include "context.h"
 #include "transactionstore.h"
+#include "iaccount.h"
 #include <string>
 
 namespace gravio {
@@ -51,8 +52,8 @@ class TransactionSync : public QObject
 {
     Q_OBJECT
 public:
-
-    TransactionSync(Context* c, DataSync* s, TransactionStore* st);
+    TransactionSync(){};
+    TransactionSync(Context* c, DataSync* s, TransactionStore* st, IAddressKeyFactory* f);
     virtual ~TransactionSync(){}
     std::string SyncWait(Context* ctx, TransactionStore* store, std::string address);
 public slots:
@@ -60,7 +61,8 @@ public slots:
     void RequestFinished(QByteArray arr);
     void RequestError(QNetworkReply::NetworkError);
 private:
-
+    IAddressKeyFactory* factory;
+    std::list<std::string> addresses;
     Context* ctx;
     DataSync* sync;
     TransactionStore* store;
@@ -68,6 +70,7 @@ private:
     bool processing;
     ProcessState state;
     std::list<std::string> queue;
+    std::list<std::string> addresses_queue;
 };
 
 } //backend

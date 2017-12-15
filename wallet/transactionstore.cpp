@@ -12,7 +12,7 @@ TransactionStore::TransactionStore() : ctx(0)
 
 }
 
-TransactionStore::TransactionStore(Context* c, KeyStore* k) : ctx(c), keystore(k)
+TransactionStore::TransactionStore(Context* c) : ctx(c)
 {
 
 }

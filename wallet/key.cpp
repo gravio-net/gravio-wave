@@ -149,18 +149,3 @@ bool Key::GetECDHSecret(const PubKey& pubkey, std::vector<unsigned char>& result
     if(!ret) return false;
     return true;
 }
-
-KeyStore::KeyStore()
-{
-    ;
-}
-
-void KeyStore::SetKey(Key& k)
-{
-    key = k;
-}
-
-void KeyStore::AddPubKey(PubKey& k)
-{
-    pubkeys.push_back(k);
-}

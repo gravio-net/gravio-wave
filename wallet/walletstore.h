@@ -1,5 +1,6 @@
 #ifndef WALLETSTORE_H
 #define WALLETSTORE_H
+#include "iaccount.h"
 #include "secp256k1/include/secp256k1.h"
 #include <vector>
 #include "uint256.h"
@@ -20,21 +21,20 @@ class Wallet: public QObject
 {
     //Q_OBJECT
 public:
-    Wallet(const Currency::Type & t = Currency::GIO);
-    virtual ~Wallet() {}
+    Wallet(IAddressKeyFactory* f);
+    virtual ~Wallet();
     Key NewKey();
-    void SetKey(Key& k);
-    void AddPubKey(PubKey& pk);
     Context* GetContext()
     {
-        return &ctx;
+        return ctx;
     }
+    std::map<uint256, CTransaction> GetTransactions(){ return txstore.GetTransactions(); }
 private:
-    Context ctx;
-    KeyStore keystore;
+    IAddressKeyFactory* factory;
+    Context* ctx;
     TransactionStore txstore;
     DataSync sync;
-    TransactionSync txsync;
+    TransactionSync* txsync;
 };
 
 /*class WalletStore

@@ -17,15 +17,15 @@ class TransactionStore
 {
 public:
     TransactionStore();
-    TransactionStore(Context* c, KeyStore* k);
+    TransactionStore(Context* c);
     bool HasTx(std::string txid);
     void SetBlocksCount(size_t bc) { blocks_count = bc;}
     void AddTx(CTransaction &tx);
+    std::map<uint256, CTransaction> GetTransactions(){ return txlist; }
     CTransaction CreateSendTx(int amount_val, int fee_val, std::string blob, bool subsract_fee, CryptoAddress &from_address, CryptoAddress &to_address);
 
 private:
     Context* ctx;
-    KeyStore* keystore;
     std::map<uint256, CTransaction> txlist;
     size_t blocks_count;
 };

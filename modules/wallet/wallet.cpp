@@ -26,6 +26,7 @@ Wallet::Wallet(IAccount* account, Currency::Type type, QObject *parent) : QObjec
 Wallet::~Wallet()
 {
     if (units_) delete units_;
+    if(backEnd_) delete backEnd_;
 }
 
 void Wallet::open()
@@ -34,6 +35,7 @@ void Wallet::open()
     {
         factory_ = account_->getAddressFactory(type_);
         units_ = new CurrencyUnits(factory_);
+        backEnd_ = new backend::Wallet(factory_);
 
         opened_ = true;
     }
