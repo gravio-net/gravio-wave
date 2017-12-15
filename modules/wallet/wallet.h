@@ -11,6 +11,7 @@
 #include "../../currency.h"
 #include "../../iaccount.h"
 #include "units.h"
+#include "../../wallet/walletstore.h"
 
 namespace gravio {
 namespace wave {
@@ -43,6 +44,7 @@ private:
     CurrencyUnits* units_;
     IAccount* account_;
     IAddressKeyFactory* factory_;
+    backend::Wallet* backEnd_;
     bool opened_;
 };
 
