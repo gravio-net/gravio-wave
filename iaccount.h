@@ -4,12 +4,18 @@
 #include <QList>
 
 #include "currency.h"
+#include "wallet/key.h"
+#include "wallet/context.h"
 
 namespace gravio {
 namespace wave {
 
 class IAddressKey
-{};
+{
+public:
+    virtual backend::Key& key() = 0;
+    virtual backend::PubKey& pubKey() = 0;
+};
 
 class IAddressKeyFactory
 {
@@ -22,6 +28,7 @@ public:
     virtual qint64 unitFactor(Currency::Unit unit) = 0;
     virtual int unitDecimals(Currency::Unit unit) = 0;
     virtual int64_t unitMaxMoney() = 0;
+    virtual backend::Context* context() = 0;
 };
 
 class IAccount

@@ -76,6 +76,8 @@ public:
     int unitDecimals(Currency::Unit unit) { return ctx_.unitDecimals(unit); }
     int64_t unitMaxMoney() { return ctx_.unitMaxMoney(); }
 
+    backend::Context* context() { return &ctx_; }
+
     void fromJSON(json::Value&);
     void toJSON(json::Value&);
 
