@@ -60,6 +60,9 @@ public slots:
     void StartSync();
     void RequestFinished(QByteArray arr);
     void RequestError(QNetworkReply::NetworkError);
+signals:
+    void newTransaction(uint256);
+    void blockCountUpdated(uint64_t);
 private:
     IAddressKeyFactory* factory;
     std::list<std::string> addresses;

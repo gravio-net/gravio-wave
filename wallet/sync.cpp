@@ -133,7 +133,8 @@ void TransactionSync::RequestFinished(QByteArray arr)
     if(state == blocks_count)
     {
         qInfo() << "Blocks count result " << QString::fromStdString(arr.toStdString());
-        size_t bc = arr.toUInt();
+        uint64_t bc = arr.toUInt();
+        if(bc != store->BlocksCount()) emit blockCountUpdated(bc);
         store->SetBlocksCount(bc);
         state = txlist;
         Request r;
@@ -148,6 +149,13 @@ void TransactionSync::RequestFinished(QByteArray arr)
         QJsonDocument doc(QJsonDocument::fromJson(arr));
         QJsonObject json = doc.object();
         QJsonArray txs = json["last_txs"].toArray();
+        if(!json["balance"].isNull())
+        {
+            double b = json["balance"].toDouble();
+            CAmount bc = b * COIN;
+            if(store->Balance() != bc)
+                store->SetBalance(bc);
+        }
         for (int i = 0; i < txs.size(); ++i)
         {
             QJsonObject tx = txs[i].toObject();
@@ -187,6 +195,7 @@ void TransactionSync::RequestFinished(QByteArray arr)
         if (DecodeHexTx(t, arr.toStdString()))
         {
             store->AddTx(t);
+            emit newTransaction(t.GetHash());
             qInfo() << "Transaction decode " << QString::fromStdString(t.ToString());
         }
         if(queue.size())

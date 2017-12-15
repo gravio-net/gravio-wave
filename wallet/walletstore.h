@@ -19,7 +19,7 @@ namespace backend {
 
 class Wallet: public QObject
 {
-    //Q_OBJECT
+    Q_OBJECT
 public:
     Wallet(IAddressKeyFactory* f);
     virtual ~Wallet();
@@ -29,6 +29,10 @@ public:
         return ctx;
     }
     std::map<uint256, CTransaction> GetTransactions(){ return txstore.GetTransactions(); }
+
+public slots:
+    void slotNewTransaction(uint256);
+    void slotBlockCountUpdated(uint64_t);
 
 signals:
     void newTransaction(uint256);

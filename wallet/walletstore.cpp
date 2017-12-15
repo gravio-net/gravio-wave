@@ -15,6 +15,11 @@ Wallet::Wallet(IAddressKeyFactory* f)
     txstore = TransactionStore(ctx);
     txsync = new TransactionSync (ctx, &sync, &txstore, f);
 
+    connect(txsync, SIGNAL(newTransaction(uint256)),
+            this, SLOT(slotNewTransaction(uint256)));
+    connect(txsync, SIGNAL(blockCountUpdated(uint64_t)),
+            this, SLOT(slotBlockCountUpdated(uint64_t)));
+
     qInfo() << "Starting wallet";
 }
 
@@ -22,6 +27,16 @@ Wallet::~Wallet()
 {
     if(txsync)
         delete txsync;
+}
+
+void Wallet::slotNewTransaction(uint256 h)
+{
+    emit newTransaction(h);
+}
+
+void Wallet::slotBlockCountUpdated(uint64_t bc)
+{
+    emit blockCountUpdated(bc);
 }
 
 Key Wallet::NewKey()
