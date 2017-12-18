@@ -13,6 +13,15 @@ namespace gravio {
 namespace wave {
 namespace backend {
 
+class Transaction: public CTransaction
+{
+public:
+    CAmount GetDebit() { return 0; }
+    CAmount GetCredit() { return 0; }
+    std::string GetAddress() { return ""; }
+    uint64_t GetTime() { return 0; }
+};
+
 class TransactionStore
 {
 public:
