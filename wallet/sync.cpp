@@ -138,9 +138,9 @@ void TransactionSync::RequestFinished(QByteArray arr)
         store->SetBlocksCount(bc);
         state = txlist;
         Request r;
-        std::string addr = addresses_queue.front();
+        current_address = addresses_queue.front();
         addresses_queue.pop_front();
-        r.Url = ctx->TransactionsListUrl() + addr;
+        r.Url = ctx->TransactionsListUrl() + current_address;
         sync->SendRequest(r);
     }
     else if(state == txlist)
@@ -194,6 +194,7 @@ void TransactionSync::RequestFinished(QByteArray arr)
         Transaction t;
         if (DecodeHexTx(t, arr.toStdString()))
         {
+            t.SetAddress(current_address);
             store->AddTx(t);
             emit newTransaction(t.GetHash());
             qInfo() << "Transaction decode " << QString::fromStdString(t.ToString());

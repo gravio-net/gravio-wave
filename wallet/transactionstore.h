@@ -18,8 +18,12 @@ class Transaction: public CTransaction
 public:
     CAmount GetDebit() { return 0; }
     CAmount GetCredit() { return 0; }
-    std::string GetAddress() { return ""; }
+    std::string GetAddress() { return address; }
     uint64_t GetTime() { return 0; }
+
+    SetAddress(std::string addr) { address = addr; }
+private:
+    std::string address;
 };
 
 class TransactionStore

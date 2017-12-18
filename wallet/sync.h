@@ -74,6 +74,7 @@ private:
     ProcessState state;
     std::list<std::string> queue;
     std::list<std::string> addresses_queue;
+    std::string current_address;
 };
 
 } //backend
