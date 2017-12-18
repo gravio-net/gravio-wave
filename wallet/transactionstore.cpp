@@ -26,23 +26,24 @@ bool TransactionStore::HasTx(std::string txid)
     return false;
 }
 
-void TransactionStore::AddTx(CTransaction &tx)
+void TransactionStore::AddTx(Transaction &tx)
 {
-    txlist.insert(std::pair<uint256, CTransaction>(tx.GetHash(), tx));
+    txlist.insert(std::pair<uint256, Transaction>(tx.GetHash(), tx));
 }
 
-CTransaction TransactionStore::CreateSendTx(int amount_val, int fee_val, std::string blob, bool subsract_fee, CryptoAddress &from_address, CryptoAddress &to_address)
+Transaction TransactionStore::CreateSendTx(int amount_val, int fee_val, std::string blob, bool subsract_fee, CryptoAddress &from_address, CryptoAddress &to_address)
 {
-    CMutableTransaction tx;
+    Transaction tx;
+    CMutableTransaction mtx;
     CAmount amount = amount_val;
     CTxOut txout(amount, to_address.GetScript(), blob);
-    tx.vout.push_back(txout);
+    //tx.vout.push_back(txout);
 
-    CAmount fee = 7500;
-    std::map<uint256, CTransaction>::iterator it = txlist.begin();
-    for(; it != txlist.begin(); it++)
-    {
-        ;
-    }
+    //CAmount fee = 7500;
+    //std::map<uint256, CTransaction>::iterator it = txlist.begin();
+    //for(; it != txlist.begin(); it++)
+    //{
+    //    ;
+    //}
     return tx;
 }

@@ -33,13 +33,13 @@ public:
     void SetBalance(CAmount b) { balance = b; }
     CAmount Balance(){ return balance;}
 
-    void AddTx(CTransaction &tx);
-    std::map<uint256, CTransaction> GetTransactions(){ return txlist; }
-    CTransaction CreateSendTx(int amount_val, int fee_val, std::string blob, bool subsract_fee, CryptoAddress &from_address, CryptoAddress &to_address);
+    void AddTx(Transaction &tx);
+    std::map<uint256, Transaction> GetTransactions(){ return txlist; }
+    Transaction CreateSendTx(int amount_val, int fee_val, std::string blob, bool subsract_fee, CryptoAddress &from_address, CryptoAddress &to_address);
 
 private:
     Context* ctx;
-    std::map<uint256, CTransaction> txlist;
+    std::map<uint256, Transaction> txlist;
     uint64_t blocks_count;
     CAmount balance;
 };

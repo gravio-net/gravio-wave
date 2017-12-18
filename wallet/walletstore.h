@@ -28,7 +28,8 @@ public:
     {
         return ctx;
     }
-    std::map<uint256, CTransaction> GetTransactions(){ return txstore.GetTransactions(); }
+    uint64_t BlocksCount() { return txstore.BlocksCount(); }
+    std::map<uint256, Transaction> GetTransactions(){ return txstore.GetTransactions(); }
 
 public slots:
     void slotNewTransaction(uint256);

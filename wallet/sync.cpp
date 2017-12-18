@@ -191,7 +191,7 @@ void TransactionSync::RequestFinished(QByteArray arr)
     else if(state == tx)
     {
         qInfo() << "Transaction result " << QString::fromStdString(arr.toStdString());
-        CTransaction t;
+        Transaction t;
         if (DecodeHexTx(t, arr.toStdString()))
         {
             store->AddTx(t);
@@ -265,7 +265,7 @@ std::string TransactionSync::SyncWait(Context* ctx, TransactionStore* store, std
             loop.exec();
             replytx ->deleteLater();
             QByteArray arrtx = replytx->readAll();
-            CTransaction tx;            
+            Transaction tx;
             if (DecodeHexTx(tx, arrtx.toStdString()))
             {
                 store->AddTx(tx);
