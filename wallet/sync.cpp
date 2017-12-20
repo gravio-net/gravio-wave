@@ -116,18 +116,30 @@ void TransactionSync::StartSync()
 {
     if(processing)
         return;
-    processing = true;
     addresses_queue = addresses;
-    state = blocks_count;
-    qInfo() << "start sync";
+
+    std::string url = ctx->BlockCountUrl();
+    qInfo() << "start sync " << url.size();
     Request r;
     r.Url = ctx->BlockCountUrl();
-    sync->SendRequest(r);
+    if(r.Url.size() > 0)
+    {
+        state = blocks_count;
+        processing = true;
+        sync->SendRequest(r);
+    }
+    else
+    {
+        qInfo() << "start sync complete url is empty";
+        return;
+    }
+
     qInfo() << "start sync complete";
 }
 
 void TransactionSync::RequestFinished(QByteArray arr)
 {
+    if(!processing) return;
     qInfo() << "TransactionSync request complete";
     qInfo() << QString::fromStdString(arr.toStdString());
     if(state == blocks_count)
@@ -191,7 +203,7 @@ void TransactionSync::RequestFinished(QByteArray arr)
     else if(state == tx)
     {
         qInfo() << "Transaction result " << QString::fromStdString(arr.toStdString());
-        Transaction t;
+        Transaction t(store);
         if (DecodeHexTx(t, arr.toStdString()))
         {
             t.SetAddress(current_address);

@@ -7,6 +7,22 @@
 
 using namespace gravio::wave::backend;
 
+Transaction::Transaction(TransactionStore* s):store(s)
+{
+    ;
+}
+
+CAmount Transaction::GetDebit()
+{
+    CAmount debit = 0;
+    for(std::vector<CTxIn>::const_iterator it = this->vin.begin(); it != this->vin.end(); it++)
+    {
+        CTxIn txin = *it;
+        txin.prevout.hash;
+    }
+    return debit;
+}
+
 TransactionStore::TransactionStore() : ctx(0)
 {
 
