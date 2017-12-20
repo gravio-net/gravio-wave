@@ -6,7 +6,7 @@ CONFIG += plugin c++11
 INCLUDEPATH += openssl/include
 
 android:  LIBS += -L../gravio-wave/openssl/bin/ -lssl -lcrypto
-else: LIBS += ../gravio-wave/openssl/bin/mingw/libcrypto-1_1.a ../gravio-wave/openssl/bin/mingw/libssl-1_1.a
+else: LIBS += ../openssl/bin/mingw/libcrypto-1_1.a ../openssl/bin/mingw/libssl-1_1.a
 
 SOURCES += main.cpp \
     logger.cpp \

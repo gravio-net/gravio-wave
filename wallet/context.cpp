@@ -13,6 +13,7 @@ Context::Context(const Currency::Type& t = Currency::GIO)
     switch(t)
     {
     case Currency::BTC:
+        maturity_ = 100;
         break;
     case Currency::DOGE:
         pchMessageStart[0] = 0xc0;
@@ -29,6 +30,7 @@ Context::Context(const Currency::Type& t = Currency::GIO)
 
         nDefaultPort = 22556;
         confirmations_ = 6;
+        maturity_ = 100;
         break;
      default:
         pchMessageStart[0] = 0xad;
@@ -45,6 +47,7 @@ Context::Context(const Currency::Type& t = Currency::GIO)
 
         nDefaultPort = 23333;
         confirmations_ = 6;
+        maturity_ = 100;
         tx_list_url = "http://blockexplorer.gravio.net/ext/getaddress/";
         // TODO: test?
         //tx_list_url = "http://blockexplorer.gravio.net/ext/getaddress/";

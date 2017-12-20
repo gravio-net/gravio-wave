@@ -45,6 +45,7 @@ public:
     qint64 unitFactor(Currency::Unit unit);
     int unitDecimals(Currency::Unit unit);
     int64_t unitMaxMoney();
+    int maturity() { return maturity_; }
 
 private:
     Currency::Type type;
@@ -53,6 +54,7 @@ private:
 
     int nDefaultPort;
     int confirmations_;
+    int maturity_;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
     MessageStartChars pchMessageStart;
 

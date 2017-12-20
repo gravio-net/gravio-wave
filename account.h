@@ -70,6 +70,7 @@ public:
     QList<IAddressKey*> keys() { return keys_; }
     Currency::Type type() { return type_; }
     int confirmations() { return ctx_.confirmations(); }
+    int maturity() { return ctx_.maturity(); }
     QString unitName(Currency::Unit number) { return ctx_.unitName(number); }
     QString unitDescription(Currency::Unit number) { return ctx_.unitDescription(number); }
     qint64 unitFactor(Currency::Unit unit) { return ctx_.unitFactor(unit); }

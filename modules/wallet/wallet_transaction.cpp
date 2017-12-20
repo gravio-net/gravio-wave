@@ -1,4 +1,5 @@
 #include "wallet_transaction.h"
+#include "wallet.h"
 
 using namespace gravio::wave;
 
@@ -7,16 +8,34 @@ using namespace gravio::wave;
 //
 Transaction::Transaction(QObject *parent) : QObject(parent)
 {
+    time_ = 0;
+    type_ = Type::Other;
+    status_ = Status::Offline;
+
     QQmlApplicationEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
 }
 
 Transaction::Transaction(Wallet* wallet, QObject *parent) : QObject(parent), wallet_(wallet)
 {
+    time_ = 0;
+    type_ = Type::Other;
+    status_ = Status::Offline;
+
     QQmlApplicationEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
 }
 
 Transaction::~Transaction()
 {
+    qDebug() << "Wallet::~Wallet()";
+}
+
+Wallet* Transaction::wallet() { return wallet_; }
+
+int Transaction::confirmationState()
+{
+    double lTotal = wallet_->factory()->confirmations();
+    int lPercent = (int)((double)blocks_ * 100.0) / lTotal;
+    return lPercent;
 }
 
 QString Transaction::tokenizeStatus()
@@ -53,4 +72,61 @@ QString Transaction::tokenizeType()
     }
 
     return QString("unknown");
+}
+
+void Transaction::create(backend::Transaction& tx)
+{
+    hash_ = tx.GetHash();
+    address_ = QString::fromStdString(tx.GetAddress());
+    debit_ = tx.GetDebit();
+    credit_ = tx.GetCredit();
+
+    int64_t lNet = credit_ - debit_;
+    if (lNet > 0 || tx.IsCoinBase())
+    {
+        // credit
+        if (!tx.IsCoinBase()) type_ = Type::RecvWithAddress;
+        else type_ = Type::Generated;
+    }
+    else
+    {
+        // debit
+        type_ = Type::SendToAddress;
+    }
+
+    update(tx);
+}
+
+void Transaction::update(backend::Transaction& tx)
+{
+    time_ = tx.GetTime();
+    block_ = tx.nLockTime;
+
+    updateStatus();
+}
+
+bool Transaction::updateStatus()
+{
+    if (status_ == Status::Confirmed) return false;
+
+    blocks_ = wallet_->blocksCount() - block_; // mature blocks
+
+    if (type_ == Type::Generated)
+    {
+        if (blocks_ < wallet_->factory()->maturity()) status_ = Status::Immature;
+        else status_ = Status::Confirmed;
+    }
+    else
+    {
+        if (!blocks_) status_ = Status::Unconfirmed;
+        else if (blocks_ < wallet_->factory()->confirmations()) status_ = Status::Confirming;
+        else status_ = Status::Confirmed;
+    }
+
+    return true;
+}
+
+QString Transaction::formatAmount()
+{
+    return wallet_->units()->format(Currency::Unit::COIN, debit_ + credit_, false, CurrencyUnits::separatorNever);
 }

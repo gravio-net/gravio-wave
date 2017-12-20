@@ -15,6 +15,11 @@ Wallets::Wallets(IAccount* account, QObject *parent): QAbstractListModel(parent)
     QQmlApplicationEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
 }
 
+Wallets::~Wallets()
+{
+    qDebug() << "Wallets::~Wallets()";
+}
+
 int Wallets::rowCount(const QModelIndex &parent) const
 {
     if (parent.isValid())

@@ -3,13 +3,17 @@
 
 #include <stdlib.h>
 
+#include <QDateTime>
+
 #include "../../currency.h"
 #include "../../iaccount.h"
 #include "../../wallet/uint256.h"
-#include "wallet.h"
+#include "../../wallet/transactionstore.h"
 
 namespace gravio {
 namespace wave {
+
+class Wallet;
 
 /**
  * @brief The Transaction class
@@ -18,6 +22,13 @@ namespace wave {
 class Transaction : public QObject
 {
     Q_OBJECT
+
+    Q_PROPERTY(QString type READ tokenizeType)
+    Q_PROPERTY(QString status READ tokenizeStatus)
+    Q_PROPERTY(QString address READ address)
+    Q_PROPERTY(QDateTime time READ qtime)
+    Q_PROPERTY(QString amount READ formatAmount)
+
 public:
     enum Type
     {
@@ -52,7 +63,7 @@ public:
     Transaction(Wallet* wallet, QObject *parent = 0);
     ~Transaction();
 
-    Wallet* wallet() { return wallet_; }
+    Wallet* wallet();
     Transaction::Type type() { return type_; }
     Transaction::Status status() { return status_; }
     QString address() { return address_; }
@@ -60,15 +71,18 @@ public:
     int64_t credit() { return credit_; }
     uint256& hash() { return hash_; }
     qint64 time() { return time_; }
-    int confirmationState()
-    {
-        double lTotal = wallet_->factory()->confirmations();
-        int lPercent = (int)((double)blocks_ * 100.0) / lTotal;
-        return lPercent;
-    }
+    QDateTime qtime() { return QDateTime::fromTime_t(static_cast<uint>(time_)); }
+    void setTime(qint64 t) { time_ = t; }
+    int confirmationState();
+
+    QString formatAmount();
 
     QString tokenizeStatus();
     QString tokenizeType();
+
+    void update(backend::Transaction&);
+    void create(backend::Transaction&);
+    bool updateStatus();
 
 private:
     Wallet* wallet_;
@@ -79,6 +93,7 @@ private:
     int64_t debit_;
     int64_t credit_;
     Status status_;
+    int block_;
     int blocks_;
 };
 

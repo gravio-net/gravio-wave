@@ -166,6 +166,73 @@ Page
                 width: pane.width - 10
                 orientation: Qt.Horizontal
             }
+
+            Rectangle
+            {
+                id: list5Bar
+                x: 10
+                y: recentTransactionLabel.y + 40
+                width: pane.width - 10
+                height: walletInstance.height - (recentTransactionLabel.y)
+                color: "transparent"
+
+                ListView
+                {
+                    id: list5View
+                    model: wallet_.transactions()
+
+                    focus: true
+                    currentIndex: -1
+                    anchors.fill: list5Bar
+
+                    delegate: ItemDelegate
+                    {
+                        id: delegateLastTransaction
+                        clip: true
+                        width: parent.width
+
+                        //height: 40
+
+                        contentItem: Row
+                        {
+                            Image
+                            {
+                                id: txTypeImage
+                                x: 0
+                                y: 0
+                                width: 40
+                                height: 40
+                                fillMode: Image.PreserveAspectFit
+
+                                source: getSource()
+
+                                function getSource()
+                                {
+                                    console.log("tx_type=" + type);
+                                    if (type == "send_to_address")
+                                    {
+                                        return "../../images/black/tx_output.png";
+                                    }
+                                    else if (type == "recv_with_address")
+                                    {
+                                        return "../../images/black/tx_input.png";
+                                    }
+                                    else if (type == "generated")
+                                    {
+                                        return "../../images/black/tx_mined.png";
+                                    }
+                                }
+                            }
+                            Label
+                            {
+                                x: 0
+                                y: 0
+                                text: address
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         ScrollIndicator.vertical: ScrollIndicator { }

@@ -25,8 +25,11 @@ Wallet::Wallet(IAccount* account, Currency::Type type, QObject *parent) : QObjec
 
 Wallet::~Wallet()
 {
+    qDebug() << "Wallet::~Wallet()";
+
     if (units_) delete units_;
-    if(backEnd_) delete backEnd_;
+    if (backEnd_) delete backEnd_;
+    if (transactions_) delete transactions_;
 }
 
 void Wallet::open()
@@ -36,9 +39,29 @@ void Wallet::open()
         factory_ = account_->getAddressFactory(type_);
         units_ = new CurrencyUnits(factory_);
         backEnd_ = new backend::Wallet(factory_);
+        transactions_ = new Transactions(this);
+
+        connect(backEnd_, SIGNAL(newTransaction(uint256)), this, SLOT(transactionUpdated(uint256)));
+        connect(backEnd_, SIGNAL(blockCountUpdated(uint64_t)), this, SLOT(blockCountUpdated(uint64_t)));
 
         opened_ = true;
     }
+}
+
+void Wallet::transactionUpdated(uint256 hash)
+{
+    std::map<uint256, backend::Transaction> lTxs = backEnd_->GetTransactions();
+    std::map<uint256, backend::Transaction>::iterator lIterator = lTxs.find(hash);
+
+    if (lIterator != lTxs.end())
+    {
+        transactions_->updateTransaction(lIterator->second);
+    }
+}
+
+void Wallet::blockCountUpdated(uint64_t blockCount)
+{
+    transactions_->updateBlockCount();
 }
 
 QString Wallet::availableBalance()

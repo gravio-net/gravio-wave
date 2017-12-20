@@ -23,6 +23,7 @@ public:
     virtual QList<IAddressKey*> keys() = 0;
     virtual Currency::Type type() = 0;
     virtual int confirmations() = 0;
+    virtual int maturity() = 0;
     virtual QString unitName(Currency::Unit unit) = 0;
     virtual QString unitDescription(Currency::Unit unit) = 0;
     virtual qint64 unitFactor(Currency::Unit unit) = 0;

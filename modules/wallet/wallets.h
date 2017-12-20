@@ -22,6 +22,7 @@ class Wallets: public QAbstractListModel
 public:
     Wallets(QObject *parent = 0);
     Wallets(IAccount* account, QObject *parent = 0);
+    ~Wallets();
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;

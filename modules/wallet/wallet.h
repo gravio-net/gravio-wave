@@ -12,6 +12,7 @@
 #include "../../iaccount.h"
 #include "units.h"
 #include "../../wallet/walletstore.h"
+#include "wallet_transactions.h"
 
 namespace gravio {
 namespace wave {
@@ -35,15 +36,22 @@ public:
     Q_INVOKABLE QString availableBalance();
     Q_INVOKABLE QString pendingBalance();
     Q_INVOKABLE QString totalBalance();
+    Q_INVOKABLE QVariant transactions() { return QVariant::fromValue(transactions_); }
 
     IAddressKeyFactory* factory() { return factory_; }
     CurrencyUnits* units() { return units_; }
+    uint64_t blocksCount() { /*return backEnd_->GetBlockCount();*/ return 0; }
+
+public slots:
+    void transactionUpdated(uint256);
+    void blockCountUpdated(uint64_t);
 
 private:
     Currency::Type type_;
     CurrencyUnits* units_;
     IAccount* account_;
     IAddressKeyFactory* factory_;
+    Transactions* transactions_;
     backend::Wallet* backEnd_;
     bool opened_;
 };
