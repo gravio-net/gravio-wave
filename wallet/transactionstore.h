@@ -59,12 +59,14 @@ class TransactionStore
 {
 public:
     TransactionStore();
-    TransactionStore(Context* c);
+    TransactionStore(Context* c, IAddressKeyFactory* f);
     bool HasTx(std::string txid);
     void SetBlocksCount(uint64_t bc) { blocks_count = bc;}
     uint64_t BlocksCount() { return blocks_count; }
     void SetBalance(CAmount b) { balance = b; }
     CAmount Balance(){ return balance;}
+
+    bool HaveKey(uint160);
 
     void AddTx(Transaction &tx);
     std::map<uint256, Transaction> GetTransactions(){ return txlist; }
@@ -72,6 +74,7 @@ public:
 
 private:
     Context* ctx;
+    IAddressKeyFactory* factory;
     std::map<uint256, Transaction> txlist;
     uint64_t blocks_count;
     CAmount balance;

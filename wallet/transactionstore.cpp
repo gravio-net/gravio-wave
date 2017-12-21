@@ -156,7 +156,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
     return false;
 }
 
-isminetype IsMine(const CTxOut& txout)
+isminetype Transaction::IsMine(const CTxOut& txout)
 {
     CScript scriptPubKey = txout.scriptPubKey;
     vector<valtype> vSolutions;
@@ -164,6 +164,24 @@ isminetype IsMine(const CTxOut& txout)
     if (!Solver(scriptPubKey, whichType, vSolutions)) {
         return ISMINE_NO;
     }
+
+    uint160 keyid;
+
+    switch (whichType)
+    {
+    case TX_NONSTANDARD:
+    case TX_NULL_DATA:
+        break;
+    case TX_PUBKEY:
+        keyid = PubKey(vSolutions[0]).GetID();
+        if (store->HaveKey(keyid))
+            return ISMINE_SPENDABLE;
+        break;
+    case TX_PUBKEYHASH:
+        keyid = uint160(vSolutions[0]);
+        if (store->HaveKey(keyid))
+            return ISMINE_SPENDABLE;
+        break;
 
     return ISMINE_NO;
 }
@@ -186,7 +204,10 @@ CAmount Transaction::GetDebit()
             Transaction prev = txit->second;
             if(txin.prevout.n < prev.vout.size())
             {
-                IsMine(prev.vout[txin.prevout.n]);
+                if(IsMine(prev.vout[txin.prevout.n]) & ISMINE_SPENDABLE)
+                {
+                    ;
+                }
 
             }
         }
@@ -199,7 +220,7 @@ TransactionStore::TransactionStore() : ctx(0)
 
 }
 
-TransactionStore::TransactionStore(Context* c) : ctx(c)
+TransactionStore::TransactionStore(Context* c, IAddressKeyFactory* f) : ctx(c), factory(f)
 {
 
 }
@@ -216,6 +237,19 @@ bool TransactionStore::HasTx(std::string txid)
 void TransactionStore::AddTx(Transaction &tx)
 {
     txlist.insert(std::pair<uint256, Transaction>(tx.GetHash(), tx));
+}
+
+bool TransactionStore::HaveKey(uint160 key)
+{
+    QList<IAddressKey*> keyslist = factory->keys();
+    for(QList<IAddressKey*>::iterator it = keyslist.begin(); it != keyslist.end(); it++)
+    {
+        PubKey pk = (*it)->pubKey();
+        uint160 id = pk.GetID();
+        if(key == id)
+            return true;
+    }
+    return false;
 }
 
 Transaction TransactionStore::CreateSendTx(int amount_val, int fee_val, std::string blob, bool subsract_fee, CryptoAddress &from_address, CryptoAddress &to_address)
