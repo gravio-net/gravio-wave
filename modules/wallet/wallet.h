@@ -36,11 +36,12 @@ public:
     Q_INVOKABLE QString availableBalance();
     Q_INVOKABLE QString pendingBalance();
     Q_INVOKABLE QString totalBalance();
+    Q_INVOKABLE QString ccy() { return QString::fromStdString(Currency::name(type_)); }
     Q_INVOKABLE QVariant transactions() { return QVariant::fromValue(transactions_); }
 
     IAddressKeyFactory* factory() { return factory_; }
     CurrencyUnits* units() { return units_; }
-    uint64_t blocksCount() { /*return backEnd_->GetBlockCount();*/ return 0; }
+    uint64_t blocksCount() { return backEnd_->BlocksCount(); }
 
 public slots:
     void transactionUpdated(uint256);

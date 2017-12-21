@@ -112,7 +112,7 @@ public:
     {
         key_ = 0; QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
     }
-    AccountAddress(Currency::Type type, AddressKey* key, bool hideAddressType): key_(key), type_(type)
+    AccountAddress(Currency::Type type, AddressKey* key, bool hideAddressType): QObject(0), key_(key), type_(type)
     {
         hideAddressType_ = hideAddressType; QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
     }

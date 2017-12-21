@@ -41,6 +41,7 @@ void AddressKey::toJSON(json::Value& root)
 
 AddressKeyFactory::~AddressKeyFactory()
 {
+    qDebug() << "AddressKeyFactory::~AddressKeyFactory";
     clear();
 }
 
@@ -98,6 +99,7 @@ void AddressKeyFactory::toJSON(json::Value& root)
 //
 AccountAddress::~AccountAddress()
 {
+    qDebug() << "AccountAddress::~AccountAddress";
 }
 
 //
@@ -115,7 +117,11 @@ AccountAddresses::AccountAddresses(Account* account, QObject *parent): QAbstract
 
 AccountAddresses::~AccountAddresses()
 {
+    qDebug() << "AccountAddress::~AccountAddress";
     clear();
+
+    qDeleteAll(factories_.values());
+    factories_.clear();
 }
 
 int AccountAddresses::rowCount(const QModelIndex &parent) const
@@ -171,7 +177,7 @@ void AccountAddresses::fromJSON(json::Value& list)
         json::Value lItem = list[lIdx];
 
         json::Value lAddressTypeItem;
-        if(lItem.find(L"type", lAddressTypeItem))
+        if(lItem.find(L"type", lAddressTypeItem) && factories_.find(Currency::type(lAddressTypeItem.getAString())) == factories_.end())
         {
             AddressKeyFactory* lFactory = new AddressKeyFactory(Currency::type(lAddressTypeItem.getAString()));
             lFactory->fromJSON(lItem);
@@ -272,9 +278,6 @@ void AccountAddresses::clear()
     //
     qDeleteAll(addresses_);
     addresses_.clear();
-
-    qDeleteAll(factories_.values());
-    factories_.clear();
 }
 
 AddressKeyFactory* AccountAddresses::getAddressFactory(Currency::Type type)
@@ -316,6 +319,7 @@ Account::Account(QObject *parent): QObject(parent)
 
 Account::~Account()
 {
+    qDebug() << "AccountAddress::~AccountAddress";
     delete addresses_;
 }
 

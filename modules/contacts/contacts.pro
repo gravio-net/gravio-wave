@@ -6,6 +6,8 @@ CONFIG += plugin c++11
 #TARGET = $$qtLibraryTarget($$TARGET)
 #uri = net.gravio.wave.modules.contacts
 
+INCLUDEPATH += ../../ ../../openssl/include
+
 # Input
 SOURCES += \
     contacts_plugin.cpp \

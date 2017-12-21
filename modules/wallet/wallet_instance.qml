@@ -87,7 +87,7 @@ Page
                     text: wallet_ != null ? wallet_.availableBalance() : "?.00000000"
                 }
 
-                x: pane.width - availableMetrics.width - 10
+                x: pane.width - availableMetrics.width - 15
                 y: coinAvatarImage.height + 35
                 verticalAlignment: Label.AlignBottom
                 font.pixelSize: 14
@@ -114,7 +114,7 @@ Page
                     text: wallet_ != null ? wallet_.pendingBalance() : "?.00000000"
                 }
 
-                x: pane.width - pendingMetrics.width - 10
+                x: pane.width - pendingMetrics.width - 15
                 y: availableBalanceLabel.y + 20
                 verticalAlignment: Label.AlignBottom
                 font.pixelSize: 14
@@ -141,7 +141,7 @@ Page
                     text: wallet_ != null ? wallet_.totalBalance() : "?.00000000"
                 }
 
-                x: pane.width - totalMetrics.width - 10
+                x: pane.width - totalMetrics.width - 15
                 y: pendingBalanceLabel.y + 20
                 verticalAlignment: Label.AlignBottom
                 font.pixelSize: 14
@@ -171,8 +171,8 @@ Page
             {
                 id: list5Bar
                 x: 10
-                y: recentTransactionLabel.y + 40
-                width: pane.width - 10
+                y: recentTransactionLabel.y + 30
+                width: pane.width - 20
                 height: walletInstance.height - (recentTransactionLabel.y)
                 color: "transparent"
 
@@ -191,43 +191,88 @@ Page
                         clip: true
                         width: parent.width
 
-                        //height: 40
+                        height: 42
 
                         contentItem: Row
                         {
-                            Image
+                            Rectangle
                             {
-                                id: txTypeImage
-                                x: 0
-                                y: 0
-                                width: 40
-                                height: 40
-                                fillMode: Image.PreserveAspectFit
-
-                                source: getSource()
-
-                                function getSource()
+                                x: -14
+                                y: -10
+                                Image
                                 {
-                                    console.log("tx_type=" + type);
-                                    if (type == "send_to_address")
+                                    id: txTypeImage
+                                    x: 0
+                                    y: 0
+                                    width: 22
+                                    height: 22
+                                    fillMode: Image.PreserveAspectFit
+
+                                    source: getSource()
+
+                                    function getSource()
                                     {
-                                        return "../../images/black/tx_output.png";
-                                    }
-                                    else if (type == "recv_with_address")
-                                    {
-                                        return "../../images/black/tx_input.png";
-                                    }
-                                    else if (type == "generated")
-                                    {
-                                        return "../../images/black/tx_mined.png";
+                                        if (type == "send_to_address")
+                                        {
+                                            return "../../images/black/txoutput.png";
+                                        }
+                                        else if (type == "recv_with_address")
+                                        {
+                                            return "../../images/black/txinput.png";
+                                        }
+                                        else if (type == "generated")
+                                        {
+                                            return "../../images/black/txmined.png";
+                                        }
+
+                                        return "../../images/black/txunknown.png";
                                     }
                                 }
                             }
-                            Label
+                            Column
                             {
-                                x: 0
-                                y: 0
-                                text: address
+                                Rectangle
+                                {
+                                    x: -14
+                                    y: -10
+                                    Label
+                                    {
+                                        x: txTypeImage.width + 2
+                                        y: 0
+                                        text: time
+                                        font.pixelSize: 12
+                                    }
+                                    Label
+                                    {
+                                        TextMetrics
+                                        {
+                                            id: addressElide
+                                            elide: Text.ElideMiddle
+                                            elideWidth: list5View.width - (txTypeImage.width + 15)
+                                            font.pixelSize: 12
+                                            text: address
+                                        }
+
+                                        x: txTypeImage.width + 2
+                                        y: 14
+                                        text: addressElide.elidedText
+                                        font.pixelSize: 12
+                                    }
+                                    Label
+                                    {
+                                        TextMetrics
+                                        {
+                                            id: amountElide
+                                            font.pixelSize: 12
+                                            text: amount + " " + wallet_.ccy()
+                                        }
+
+                                        x: list5View.width - (amountElide.width + 10)
+                                        y: 0
+                                        text: amountElide.text
+                                        font.pixelSize: 12
+                                    }
+                                }
                             }
                         }
                     }

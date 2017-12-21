@@ -128,5 +128,5 @@ bool Transaction::updateStatus()
 
 QString Transaction::formatAmount()
 {
-    return wallet_->units()->format(Currency::Unit::COIN, debit_ + credit_, false, CurrencyUnits::separatorNever);
+    return wallet_->units()->format(Currency::Unit::COIN, debit_ + credit_, true, CurrencyUnits::separatorAlways);
 }

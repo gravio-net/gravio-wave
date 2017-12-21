@@ -26,7 +26,7 @@ class Transaction : public QObject
     Q_PROPERTY(QString type READ tokenizeType)
     Q_PROPERTY(QString status READ tokenizeStatus)
     Q_PROPERTY(QString address READ address)
-    Q_PROPERTY(QDateTime time READ qtime)
+    Q_PROPERTY(QString time READ qtime)
     Q_PROPERTY(QString amount READ formatAmount)
 
 public:
@@ -71,7 +71,11 @@ public:
     int64_t credit() { return credit_; }
     uint256& hash() { return hash_; }
     qint64 time() { return time_; }
-    QDateTime qtime() { return QDateTime::fromTime_t(static_cast<uint>(time_)); }
+    QString qtime()
+    {
+        QDateTime lDate = QDateTime::fromTime_t(static_cast<uint>(time_));
+        return lDate.date().toString(Qt::SystemLocaleShortDate) + QString(" ") + lDate.toString("hh:mm");
+    }
     void setTime(qint64 t) { time_ = t; }
     int confirmationState();
 
