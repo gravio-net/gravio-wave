@@ -13,6 +13,31 @@ namespace gravio {
 namespace wave {
 namespace backend {
 
+enum txnouttype
+{
+    TX_NONSTANDARD,
+    // 'standard' transaction types:
+    TX_PUBKEY,
+    TX_PUBKEYHASH,
+    TX_SCRIPTHASH,
+    TX_MULTISIG,
+    TX_NULL_DATA,
+    TX_WITNESS_V0_SCRIPTHASH,
+    TX_WITNESS_V0_KEYHASH,
+};
+
+enum isminetype
+{
+    ISMINE_NO = 0,
+    //! Indicates that we don't know how to create a scriptSig that would solve this if we were given the appropriate private keys
+    ISMINE_WATCH_UNSOLVABLE = 1,
+    //! Indicates that we know how to create a scriptSig that would solve this if we were given the appropriate private keys
+    ISMINE_WATCH_SOLVABLE = 2,
+    ISMINE_WATCH_ONLY = ISMINE_WATCH_SOLVABLE | ISMINE_WATCH_UNSOLVABLE,
+    ISMINE_SPENDABLE = 4,
+    ISMINE_ALL = ISMINE_WATCH_ONLY | ISMINE_SPENDABLE
+};
+
 class TransactionStore;
 
 class Transaction: public CTransaction
