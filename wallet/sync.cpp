@@ -48,7 +48,14 @@ bool DecodeHexTx(CTransaction& tx, const std::string& strHexTx, bool fTryNoWitne
 DataSync::DataSync()
 {
     manager = new QNetworkAccessManager(this);
+    reply = 0;
     //connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(Finished(QNetworkReply*)));
+}
+
+void DataSync::AbortRequest()
+{
+    if(reply)
+        reply->abort();
 }
 
 void DataSync::SendRequest(const Request& r)
@@ -94,6 +101,7 @@ TransactionSync::TransactionSync(Context* c, DataSync* s, TransactionStore* st, 
 {
     timer = new QTimer(this);
     processing = false;
+    stopped = false;
 
     QList<IAddressKey*> keyslist = factory->keys();
     for(QList<IAddressKey*>::iterator it = keyslist.begin(); it != keyslist.end(); it++)
@@ -112,9 +120,14 @@ TransactionSync::TransactionSync(Context* c, DataSync* s, TransactionStore* st, 
     timer->start(10000);
 }
 
+void TransactionSync::StopSync()
+{
+    stopped = true;
+    sync->AbortRequest();
+}
 void TransactionSync::StartSync()
 {
-    if(processing)
+    if(processing || stopped)
         return;
     addresses_queue = addresses;
 
@@ -139,7 +152,7 @@ void TransactionSync::StartSync()
 
 void TransactionSync::RequestFinished(QByteArray arr)
 {
-    if(!processing) return;
+    if(!processing || stopped) return;
     qInfo() << "TransactionSync request complete";
     qInfo() << QString::fromStdString(arr.toStdString());
     if(state == blocks_count)

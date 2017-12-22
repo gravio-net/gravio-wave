@@ -28,6 +28,7 @@ public:
 
     DataSync();
     void SendRequest(const Request&);
+    void AbortRequest();
 public slots:
     void Finished(QNetworkReply* reply);
     void ReadyRead();
@@ -56,6 +57,7 @@ public:
     TransactionSync(Context* c, DataSync* s, TransactionStore* st, IAddressKeyFactory* f);
     virtual ~TransactionSync(){}
     std::string SyncWait(Context* ctx, TransactionStore* store, std::string address);
+    void StopSync();
 public slots:
     void StartSync();
     void RequestFinished(QByteArray arr);
@@ -71,6 +73,7 @@ private:
     TransactionStore* store;
     QTimer* timer;
     bool processing;
+    bool stopped;
     ProcessState state;
     std::list<std::string> queue;
     std::list<std::string> addresses_queue;
