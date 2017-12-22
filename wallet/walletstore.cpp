@@ -4,6 +4,7 @@
 #include <QFile>
 #include "application.h"
 #include "exception.h"
+#include "iaccount.h"
 
 using namespace gravio::wave::backend;
 
@@ -12,7 +13,7 @@ Wallet::Wallet(IAddressKeyFactory* f)
     txsync = 0;
     factory = f;
     ctx = factory->context();
-    txstore = TransactionStore(ctx);
+    txstore = TransactionStore(ctx, f);
     txsync = new TransactionSync (ctx, &sync, &txstore, f);
 
     connect(txsync, SIGNAL(newTransaction(uint256)),

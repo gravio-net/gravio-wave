@@ -17,6 +17,19 @@ class PubKey
 public:
     PubKey(){}
 
+    //! Construct a public key using begin/end iterators to byte data.
+    template <typename T>
+    PubKey(const T pbegin, const T pend)
+    {
+        Set(pbegin, pend);
+    }
+
+    //! Construct a public key from a byte vector.
+    PubKey(const std::vector<unsigned char>& vch)
+    {
+        Set(vch.begin(), vch.end());
+    }
+
     unsigned int size() const { return GetLen(vch[0]); }
     const unsigned char* begin() const { return vch; }
     const unsigned char* end() const { return vch + size(); }

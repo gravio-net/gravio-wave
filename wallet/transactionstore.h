@@ -5,6 +5,7 @@
 #include "cryptoaddress.h"
 #include "key.h"
 #include "primitives/transaction.h"
+#include "iaccount.h"
 #include <list>
 #include <string.h>
 #include <map>
@@ -48,6 +49,7 @@ public:
     CAmount GetCredit() { return 0; }
     std::string GetAddress() { return address; }
     uint64_t GetTime() { return 0; }
+    isminetype IsMine(const CTxOut& txout);
 
     void SetAddress(std::string addr) { address = addr; }
 private:

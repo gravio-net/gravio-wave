@@ -90,7 +90,7 @@ void DataSync::slotError(QNetworkReply::NetworkError err)
     ;
 }*/
 
-TransactionSync::TransactionSync(Context* c, DataSync* s, TransactionStore* st, IAddressKeyFactory* f):ctx(c), sync(s), store(st, f), factory(f)
+TransactionSync::TransactionSync(Context* c, DataSync* s, TransactionStore* st, IAddressKeyFactory* f):ctx(c), sync(s), store(st), factory(f)
 {
     timer = new QTimer(this);
     processing = false;

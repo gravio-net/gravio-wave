@@ -182,6 +182,7 @@ isminetype Transaction::IsMine(const CTxOut& txout)
         if (store->HaveKey(keyid))
             return ISMINE_SPENDABLE;
         break;
+    }
 
     return ISMINE_NO;
 }
