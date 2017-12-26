@@ -275,7 +275,7 @@ Transaction TransactionStore::CreateSendTx(int amount_val, int fee_val, std::str
     //script for destination
     Transaction tx;
     CAmount nAmount = amount_val;
-    CTxOut txout(amount, to_address.GetScript(), blob);
+    CTxOut txout(nAmount, to_address.GetScript(), blob);
     //tx.vout.push_back(txout);
 
     CAmount nValue = 0;
@@ -284,7 +284,7 @@ Transaction TransactionStore::CreateSendTx(int amount_val, int fee_val, std::str
 
     if (nValue < 0 || nAmount < 0)
     {
-        strFailReason = _("Transaction amounts must be positive");
+        strFailReason = "Transaction amounts must be positive";
         return tx;
     }
     nValue += nAmount;
