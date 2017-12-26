@@ -46,7 +46,7 @@ class Transaction: public CTransaction
 public:
     Transaction(TransactionStore* s = 0);
     CAmount GetDebit();
-    CAmount GetCredit() { return 0; }
+    CAmount GetCredit();
     std::string GetAddress() { return address; }
     uint64_t GetTime() { return 0; }
     isminetype IsMine(const CTxOut& txout);
