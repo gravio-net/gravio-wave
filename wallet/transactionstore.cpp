@@ -216,6 +216,20 @@ CAmount Transaction::GetDebit()
     return debit;
 }
 
+CAmount Transaction::GetCredit() 
+{
+    CAmount credit = 0;
+    for(std::vector<CTxOut>::const_iterator it = this->vout.begin(); it != this->vout.end(); it++)
+    {
+        CTxOut txout = *it;
+        if(IsMine(txout) & ISMINE_ALL)
+        {
+            credit = credit + txout.nValue;
+        }
+    }
+    return credit; 
+}
+
 TransactionStore::TransactionStore() : ctx(0)
 {
 
