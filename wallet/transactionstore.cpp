@@ -269,11 +269,32 @@ bool TransactionStore::HaveKey(uint160 key)
 
 Transaction TransactionStore::CreateSendTx(int amount_val, int fee_val, std::string blob, bool subsract_fee, CryptoAddress &from_address, CryptoAddress &to_address)
 {
+    std::string strFailReason;
+    //TODO: check balance
+
+    //script for destination
     Transaction tx;
-    CMutableTransaction mtx;
-    CAmount amount = amount_val;
+    CAmount nAmount = amount_val;
     CTxOut txout(amount, to_address.GetScript(), blob);
     //tx.vout.push_back(txout);
+
+    CAmount nValue = 0;
+    int nChangePosRequest = -1;
+    unsigned int nSubtractFeeFromAmount = 0;
+
+    if (nValue < 0 || nAmount < 0)
+    {
+        strFailReason = _("Transaction amounts must be positive");
+        return tx;
+    }
+    nValue += nAmount;
+
+    if (subsract_fee)
+        nSubtractFeeFromAmount++;
+
+    bool fTimeReceivedIsTxTime = true;
+    CMutableTransaction txNew;
+    txNew.nLockTime = BlocksCount();
 
     //CAmount fee = 7500;
     //std::map<uint256, CTransaction>::iterator it = txlist.begin();
