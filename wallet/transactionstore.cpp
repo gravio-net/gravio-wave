@@ -207,7 +207,7 @@ CAmount Transaction::GetDebit()
             {
                 if(IsMine(prev.vout[txin.prevout.n]) & ISMINE_SPENDABLE)
                 {
-                    ;
+                    debit = debit + prev.vout[txin.prevout.n].nValue;
                 }
 
             }
