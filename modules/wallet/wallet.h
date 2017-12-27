@@ -30,6 +30,7 @@ public:
     ~Wallet();
 
     void open();
+    void delay(int);
 
     Q_INVOKABLE QString addressType() { return QString(Currency::name(type_).c_str()); }
 

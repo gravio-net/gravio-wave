@@ -27,9 +27,20 @@ Wallet::~Wallet()
 {
     qDebug() << "Wallet::~Wallet()";
 
+    backEnd_->StopSync();
+
+    delay(1000);
+
     if (units_) delete units_;
     if (backEnd_) delete backEnd_;
     if (transactions_) delete transactions_;
+}
+
+void Wallet::delay(int msecs)
+{
+    QTime lTimeOut = QTime::currentTime().addMSecs(msecs);
+    while (QTime::currentTime() < lTimeOut)
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
 void Wallet::open()
