@@ -77,7 +77,7 @@ void Wallet::blockCountUpdated(uint64_t blockCount)
 
 QString Wallet::availableBalance()
 {
-    return QString("0.00000000 ") + QString::fromStdString(Currency::name(type_));
+    return units()->format(Currency::Unit::COIN, backEnd_->Balance(), false, CurrencyUnits::separatorAlways) + " " + QString::fromStdString(Currency::name(type_));
 }
 
 QString Wallet::pendingBalance()
@@ -87,6 +87,6 @@ QString Wallet::pendingBalance()
 
 QString Wallet::totalBalance()
 {
-    return QString("0.00000000 ") + QString::fromStdString(Currency::name(type_));
+    return units()->format(Currency::Unit::COIN, backEnd_->Balance(), false, CurrencyUnits::separatorAlways) + " " + QString::fromStdString(Currency::name(type_));
 }
 
