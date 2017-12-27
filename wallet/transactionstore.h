@@ -48,13 +48,15 @@ public:
     CAmount GetDebit();
     CAmount GetCredit();
     std::string GetAddress() { return address; }
-    uint64_t GetTime() { return 0; }
+    uint64_t GetTime() { return time; }
+    void SetTime(uint64_t t) { time = t; }
     isminetype IsMine(const CTxOut& txout);
 
     void SetAddress(std::string addr) { address = addr; }
 private:
     std::string address;
     TransactionStore* store;
+    uint64_t time;
 };
 
 class TransactionStore

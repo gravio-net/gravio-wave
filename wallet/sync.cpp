@@ -194,7 +194,7 @@ void TransactionSync::RequestFinished(QByteArray arr)
             {
                 qInfo() << "not found";
                 std::string urltx = ctx->TransactionUrl() + "?txid="
-                        + tx["addresses"].toString().toStdString() + "&decrypt=0";
+                        + tx["addresses"].toString().toStdString() + "&decrypt=1";
                 queue.push_back(urltx);
             }
             //std::vector<unsigned char> hash = ParseHex(txhash);
@@ -220,8 +220,13 @@ void TransactionSync::RequestFinished(QByteArray arr)
     else if(state == tx)
     {
         qInfo() << "Transaction result " << QString::fromStdString(arr.toStdString());
+        QJsonDocument doc(QJsonDocument::fromJson(arr));
+        QJsonObject json = doc.object();
         Transaction t(store);
-        if (DecodeHexTx(t, arr.toStdString()))
+        int times = json["time"].toInt();
+        qInfo() << "Transaction time " << times;
+        t.SetTime(times);
+        if (DecodeHexTx(t, json["hex"].toString().toStdString()))
         {
             t.SetAddress(current_address);
             store->AddTx(t);
