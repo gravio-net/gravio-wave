@@ -192,7 +192,7 @@ Transaction::Transaction(TransactionStore* s):store(s)
     ;
 }
 
-CAmount Transaction::GetDebit()
+CAmount Transaction::GetCredit()
 {
     CAmount debit = 0;
     std::map<uint256, Transaction> txs = store->GetTransactions();
@@ -224,7 +224,7 @@ CAmount Transaction::GetDebit()
     return debit;
 }
 
-CAmount Transaction::GetCredit() 
+CAmount Transaction::GetDebit()
 {
     CAmount credit = 0;
     for(std::vector<CTxOut>::const_iterator it = this->vout.begin(); it != this->vout.end(); it++)
