@@ -176,8 +176,12 @@ void TransactionSync::RequestFinished(QByteArray arr)
         QJsonArray txs = json["last_txs"].toArray();
         if(!json["balance"].isNull())
         {
-            double b = json["balance"].toDouble();
+            QString bstr = json["balance"].toString();
+
+            //json["balance"].toString().toDouble();
+            double b = bstr.toDouble();
             CAmount bc = b * COIN;
+            qInfo() << "Set balance " << bc;
             if(store->Balance() != bc)
                 store->SetBalance(bc);
         }

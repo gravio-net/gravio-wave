@@ -240,12 +240,12 @@ CAmount Transaction::GetDebit()
     return credit; 
 }
 
-TransactionStore::TransactionStore() : ctx(0)
+TransactionStore::TransactionStore() : ctx(0), balance(0)
 {
 
 }
 
-TransactionStore::TransactionStore(Context* c, IAddressKeyFactory* f) : ctx(c), factory(f)
+TransactionStore::TransactionStore(Context* c, IAddressKeyFactory* f) : ctx(c), factory(f), balance(0)
 {
 
 }
