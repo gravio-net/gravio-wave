@@ -31,6 +31,7 @@ public:
     uint64_t BlocksCount() { return txstore.BlocksCount(); }
     std::map<uint256, Transaction> GetTransactions(){ return txstore.GetTransactions(); }
     void StopSync() { txsync->StopSync(); }
+    CAmount Balance(){ return txstore.Balance();}
 
 public slots:
     void slotNewTransaction(uint256);

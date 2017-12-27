@@ -196,7 +196,7 @@ CAmount Transaction::GetDebit()
 {
     CAmount debit = 0;
     std::map<uint256, Transaction> txs = store->GetTransactions();
-    for(std::vector<CTxIn>::const_iterator it = this->vin.begin(); it != this->vin.end(); it++)
+    /*for(std::vector<CTxIn>::const_iterator it = this->vin.begin(); it != this->vin.end(); it++)
     {
         CTxIn txin = *it;
         std::map<uint256, Transaction>::iterator txit = txs.find(txin.prevout.hash);
@@ -212,6 +212,14 @@ CAmount Transaction::GetDebit()
 
             }
         }
+    }*/
+    for(std::vector<CTxOut>::const_iterator it = this->vout.begin(); it != this->vout.end(); it++)
+    {
+        CTxOut txout = *it;
+        if(IsMine(txout) & ISMINE_SPENDABLE)
+        {
+            debit = debit + txout.nValue;
+        }
     }
     return debit;
 }
@@ -222,9 +230,11 @@ CAmount Transaction::GetCredit()
     for(std::vector<CTxOut>::const_iterator it = this->vout.begin(); it != this->vout.end(); it++)
     {
         CTxOut txout = *it;
+        credit = credit + txout.nValue;
         if(IsMine(txout) & ISMINE_ALL)
         {
-            credit = credit + txout.nValue;
+            credit = 0;
+            break;
         }
     }
     return credit; 
