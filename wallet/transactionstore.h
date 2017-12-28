@@ -39,6 +39,8 @@ enum isminetype
     ISMINE_ALL = ISMINE_WATCH_ONLY | ISMINE_SPENDABLE
 };
 
+typedef uint8_t isminefilter;
+
 class TransactionStore;
 
 class Transaction: public CTransaction
@@ -46,6 +48,7 @@ class Transaction: public CTransaction
 public:
     Transaction(TransactionStore* s = 0);
     CAmount GetDebit();
+    CAmount GetDebit(const isminefilter& filter);
     CAmount GetCredit();
     std::string GetAddress() { return address; }
     uint64_t GetTime() { return time; }
@@ -53,12 +56,28 @@ public:
     isminetype IsMine(const CTxOut& txout);
 
     void SetAddress(std::string addr) { address = addr; }
+    bool IsTrusted();
 private:
     std::string address;
     TransactionStore* store;
     uint64_t time;
 };
 
+class COutput
+{
+public:
+    const Transaction *tx;
+    int i;
+    int nDepth;
+    bool fSpendable;
+    bool fSolvable;
+
+    COutput(const Transaction *txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn)
+    {
+        tx = txIn; i = iIn; nDepth = nDepthIn; fSpendable = fSpendableIn; fSolvable = fSolvableIn;
+    }
+
+};
 class TransactionStore
 {
 public:
@@ -74,6 +93,8 @@ public:
 
     void AddTx(Transaction &tx);
     std::map<uint256, Transaction> GetTransactions(){ return txlist; }
+
+    void AvailableCoins(std::vector<COutput> &, bool);
     Transaction CreateSendTx(int amount_val, int fee_val, std::string blob, bool subsract_fee, CryptoAddress &from_address, CryptoAddress &to_address);
 
 private:

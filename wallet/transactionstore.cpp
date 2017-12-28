@@ -156,6 +156,34 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
     return false;
 }
 
+
+bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
+{
+    if (tx.nLockTime == 0)
+        return true;
+    if ((int64_t)tx.nLockTime < ((int64_t)tx.nLockTime < LOCKTIME_THRESHOLD ? (int64_t)nBlockHeight : nBlockTime))
+        return true;
+
+    //BOOST_FOREACH(const CTxIn& txin, tx.vin)
+    std::vector<CTxIn>::const_iterator it = tx.vin.begin();
+    for(; it != tx.vin.end(); it++)
+    {
+        CTxIn txin = *it;
+        if (!(txin.nSequence == CTxIn::SEQUENCE_FINAL))
+            return false;
+    }
+    return true;
+}
+
+bool CheckFinalTx(const CTransaction &tx, int blockh)
+{
+    int flags = 0;
+    const int nBlockHeight = blockh + 1;
+    time_t now = time(NULL);
+    const int64_t nBlockTime = now;
+    return IsFinalTx(tx, nBlockHeight, nBlockTime);
+}
+
 isminetype Transaction::IsMine(const CTxOut& txout)
 {
     CScript scriptPubKey = txout.scriptPubKey;
@@ -237,15 +265,72 @@ CAmount Transaction::GetDebit()
             break;
         }
     }
-    return credit; 
+    return credit;
 }
 
-TransactionStore::TransactionStore() : ctx(0), balance(0)
+CAmount Transaction::GetDebit(const isminefilter& filter)
+{
+    std::map<uint256, Transaction> txlist = store->GetTransactions();
+    CAmount nDebit = 0;
+    //BOOST_FOREACH(const CTxIn& txin, tx.vin)
+    for(std::vector<CTxIn>::const_iterator it = this->vin.begin(); it != this->vin.end(); it++)
+    {
+        CTxIn txin = *it;
+
+        //nDebit += GetDebit(txin, filter);
+        std::map<uint256, Transaction>::iterator pit = txlist.find(txin.prevout.hash);
+        if(pit != txlist.end())
+        {
+            Transaction prev = pit->second;
+            if (txin.prevout.n < prev.vout.size())
+                if (IsMine(prev.vout[txin.prevout.n]) & filter)
+                    nDebit += prev.vout[txin.prevout.n].nValue;
+        }
+    }
+    return nDebit;
+}
+
+bool Transaction::IsTrusted()
+{
+    // Quick answer in most cases
+    if (!CheckFinalTx(*this, store->BlocksCount()))
+        return false;
+    int nDepth = store->BlocksCount() - this->nLockTime;
+    if (nDepth >= 1)
+        return true;
+    if (nDepth < 0)
+        return false;
+    //if (!bSpendZeroConfChange || !IsFromMe(ISMINE_ALL)) // using wtx's cached debit
+    //    return false;
+    if( ! (GetDebit(ISMINE_ALL) > 0) )
+            false;
+
+    // Don't trust unconfirmed transactions from us unless they are in the mempool.
+    //if (!InMempool())
+    //    return false;
+
+    // Trusted if all inputs are from us and are in the mempool:
+    for(std::vector<CTxIn>::const_iterator it = this->vin.begin(); it != this->vin.end(); it++)
+    {
+        CTxIn txin = *it;
+        std::map<uint256, Transaction> txlist = store->GetTransactions();
+        std::map<uint256, Transaction>::iterator pit = txlist.find(txin.prevout.hash);
+        if(pit == txlist.end())
+            return false;
+        Transaction parent = pit->second;
+        const CTxOut& parentOut = parent.vout[txin.prevout.n];
+        if (IsMine(parentOut) != ISMINE_SPENDABLE)
+            return false;
+    }
+    return true;
+}
+
+TransactionStore::TransactionStore() : ctx(0), balance(0), blocks_count(0)
 {
 
 }
 
-TransactionStore::TransactionStore(Context* c, IAddressKeyFactory* f) : ctx(c), factory(f), balance(0)
+TransactionStore::TransactionStore(Context* c, IAddressKeyFactory* f) : ctx(c), factory(f), balance(0), blocks_count(0)
 {
 
 }
@@ -277,13 +362,34 @@ bool TransactionStore::HaveKey(uint160 key)
     return false;
 }
 
+
+
+void TransactionStore::AvailableCoins(std::vector<COutput> & vCoins, bool fOnlyConfirmed)
+{
+    vCoins.clear();
+    std::map<uint256, Transaction>::iterator it = txlist.begin();
+    for(; it != txlist.end(); it++)
+    {
+        const uint256& txid = it->first;
+        Transaction* pcoin = &(*it).second;;
+
+        if (!CheckFinalTx(*pcoin, (int)blocks_count))
+            continue;
+
+        if (fOnlyConfirmed && !pcoin->IsTrusted())
+            continue;
+    }
+}
+
 Transaction TransactionStore::CreateSendTx(int amount_val, int fee_val, std::string blob, bool subsract_fee, CryptoAddress &from_address, CryptoAddress &to_address)
 {
+
     std::string strFailReason;
     //TODO: check balance
 
     //script for destination
     Transaction tx;
+    if(blocks_count == 0) return tx;
     CAmount nAmount = amount_val;
     CTxOut txout(nAmount, to_address.GetScript(), blob);
     //tx.vout.push_back(txout);
@@ -305,6 +411,9 @@ Transaction TransactionStore::CreateSendTx(int amount_val, int fee_val, std::str
     bool fTimeReceivedIsTxTime = true;
     CMutableTransaction txNew;
     txNew.nLockTime = BlocksCount();
+
+    std::vector<COutput> vAvailableCoins;
+    AvailableCoins(vAvailableCoins, true);
 
     //CAmount fee = 7500;
     //std::map<uint256, CTransaction>::iterator it = txlist.begin();
