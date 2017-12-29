@@ -381,17 +381,13 @@ void TransactionStore::AvailableCoins(std::vector<COutput> & vCoins, bool fOnlyC
     }
 }
 
-Transaction TransactionStore::CreateSendTx(int amount_val, int fee_val, std::string blob, bool subsract_fee, CryptoAddress &from_address, CryptoAddress &to_address)
+bool TransactionStore::CreateSendTx(Transaction& tx, int amountVal, int feeVal, std::string blob, bool subsractFee, 
+    CryptoAddress &from_address, CryptoAddress &to_address, int& nChangePosInOut, std::string& strFailReason)
 {
-
-    std::string strFailReason;
-    //TODO: check balance
-
-    //script for destination
-    Transaction tx;
-    if(blocks_count == 0) return tx;
-    CAmount nAmount = amount_val;
-    CTxOut txout(nAmount, to_address.GetScript(), blob);
+    int nChangePosRequest = nChangePosInOut;
+    
+    if(blocks_count == 0) return false;
+    CAmount nAmount = amountVal;
     //tx.vout.push_back(txout);
 
     CAmount nValue = 0;
@@ -401,7 +397,7 @@ Transaction TransactionStore::CreateSendTx(int amount_val, int fee_val, std::str
     if (nValue < 0 || nAmount < 0)
     {
         strFailReason = "Transaction amounts must be positive";
-        return tx;
+        return false;
     }
     nValue += nAmount;
 
@@ -415,11 +411,40 @@ Transaction TransactionStore::CreateSendTx(int amount_val, int fee_val, std::str
     std::vector<COutput> vAvailableCoins;
     AvailableCoins(vAvailableCoins, true);
 
+    //transaction fee
+    nFeeRet = 0;
+
+    // Start with no fee and loop until there is enough fee
+    while (true)
+    {
+        nChangePosInOut = nChangePosRequest;
+        txNew.vin.clear();
+        txNew.vout.clear();
+        txNew.wit.SetNull();
+        bool fFirst = true;
+
+        CAmount nValueToSelect = nValue;
+
+        CAmount nValueToSelect = nValue;
+        if (nSubtractFeeFromAmount == 0)
+            nValueToSelect += nFeeRet;
+        double dPriority = 0;
+
+        CTxOut txout(nAmount, to_address.GetScript(), blob);
+        if(subsractFee)
+        {
+            txout.nValue -= nFeeRet
+        }
+
+        if(txout.IsDust(::minRelayTxFee))
+        {}
+    }
+
     //CAmount fee = 7500;
     //std::map<uint256, CTransaction>::iterator it = txlist.begin();
     //for(; it != txlist.begin(); it++)
     //{
     //    ;
     //}
-    return tx;
+    return true;
 }
