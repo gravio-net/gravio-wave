@@ -9,6 +9,9 @@
 using namespace gravio::wave::backend;
 using namespace std;
 
+CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
+CAmount maxTxFee = DEFAULT_TRANSACTION_MAXFEE;
+
 typedef vector<unsigned char> valtype;
 
 /**
@@ -391,7 +394,7 @@ bool TransactionStore::CreateSendTx(Transaction& tx, int amountVal, int feeVal, 
     //tx.vout.push_back(txout);
 
     CAmount nValue = 0;
-    int nChangePosRequest = -1;
+    nChangePosRequest = -1;
     unsigned int nSubtractFeeFromAmount = 0;
 
     if (nValue < 0 || nAmount < 0)
@@ -401,7 +404,7 @@ bool TransactionStore::CreateSendTx(Transaction& tx, int amountVal, int feeVal, 
     }
     nValue += nAmount;
 
-    if (subsract_fee)
+    if (subsractFee)
         nSubtractFeeFromAmount++;
 
     bool fTimeReceivedIsTxTime = true;
@@ -412,7 +415,7 @@ bool TransactionStore::CreateSendTx(Transaction& tx, int amountVal, int feeVal, 
     AvailableCoins(vAvailableCoins, true);
 
     //transaction fee
-    nFeeRet = 0;
+    CAmount nFeeRet = 0;
 
     // Start with no fee and loop until there is enough fee
     while (true)
@@ -424,8 +427,6 @@ bool TransactionStore::CreateSendTx(Transaction& tx, int amountVal, int feeVal, 
         bool fFirst = true;
 
         CAmount nValueToSelect = nValue;
-
-        CAmount nValueToSelect = nValue;
         if (nSubtractFeeFromAmount == 0)
             nValueToSelect += nFeeRet;
         double dPriority = 0;
@@ -433,7 +434,7 @@ bool TransactionStore::CreateSendTx(Transaction& tx, int amountVal, int feeVal, 
         CTxOut txout(nAmount, to_address.GetScript(), blob);
         if(subsractFee)
         {
-            txout.nValue -= nFeeRet
+            txout.nValue -= nFeeRet;
         }
 
         if(txout.IsDust(::minRelayTxFee))

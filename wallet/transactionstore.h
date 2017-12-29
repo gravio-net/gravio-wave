@@ -14,6 +14,10 @@ namespace gravio {
 namespace wave {
 namespace backend {
 
+static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = 100000;
+//! -maxtxfee default
+static const CAmount DEFAULT_TRANSACTION_MAXFEE = 0.1 * COIN;
+
 enum txnouttype
 {
     TX_NONSTANDARD,
