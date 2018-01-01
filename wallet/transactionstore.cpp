@@ -328,6 +328,20 @@ bool Transaction::IsTrusted()
     return true;
 }
 
+int Transaction::GetDepthInMainChain() const
+{
+    if(!store->BlocksCount()) return 0;
+    return store->BlocksCount() - this->nLockTime + 1;
+    //return 0;
+}
+
+int Transaction::GetBlocksToMaturity() const
+{
+    if (!IsCoinBase())
+        return 0;
+    return max(0, (COINBASE_MATURITY+1) - GetDepthInMainChain());
+}
+
 TransactionStore::TransactionStore() : ctx(0), balance(0), blocks_count(0)
 {
 
@@ -381,7 +395,26 @@ void TransactionStore::AvailableCoins(std::vector<COutput> & vCoins, bool fOnlyC
 
         if (fOnlyConfirmed && !pcoin->IsTrusted())
             continue;
+
+        if(pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
+            continue;
     }
+}
+
+void TransactionStore::SelectCoins(const vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, set<pair<const CTransaction*,unsigned int> >& setCoinsRet, CAmount& nValueRet)
+{
+    vector<COutput> vCoins(vAvailableCoins);
+
+    //BOOST_FOREACH(const COutput& out, vCoins)
+    for(vector<COutput>::iterator it = vCoins.begin(); it != vCoins.end(); it++)
+    {
+        COutput out = *it;
+        if (!out.fSpendable)
+             continue;
+        nValueRet += out.tx->vout[out.i].nValue;
+        setCoinsRet.insert(make_pair(out.tx, out.i));
+    }
+    return (nValueRet >= nTargetValue);
 }
 
 bool TransactionStore::CreateSendTx(Transaction& tx, int amountVal, int feeVal, std::string blob, bool subsractFee, 
@@ -438,7 +471,47 @@ bool TransactionStore::CreateSendTx(Transaction& tx, int amountVal, int feeVal, 
         }
 
         if(txout.IsDust(::minRelayTxFee))
-        {}
+        {
+            if(subsractFee && nFeeRet > 0)
+            {
+                if (txout.nValue < 0)
+                    strFailReason = "The transaction amount is too small to pay the fee";
+                else
+                    strFailReason = "The transaction amount is too small to send after the fee has been deducted";
+            }
+            else
+                strFailReason = "Transaction amount too small";
+            return false;
+        }
+        txNew.vout.push_back(txout);
+
+        set<pair<const CTransaction*,unsigned int> > setCoins;
+        CAmount nValueIn = 0;
+        if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn))
+        {
+            strFailReason = "Insufficient funds";
+            return false;
+        }
+
+        set<pair<const CTransaction*,unsigned int> >::iterator cit = setCoins.begin();
+        for(; cit != setCoins.end(); cit++)
+        {
+            std::pair<const CTransaction*, unsigned int> pcoin = *cit;
+            CAmount nCredit = pcoin.first->vout[pcoin.second].nValue;
+            //The coin age after the next block (depth+1) is used instead of the current,
+            //reflecting an assumption the user would accept a bit more delay for
+            //a chance at a free transaction.
+            //But mempool inputs might still be in the mempool, so their age stays 0
+            //TODO: need depth int age = pcoin.first->GetDepthInMainChain();
+            if(age < 0)
+            {
+                strFailReason = "Age fail";
+                return false
+            }
+            if (age != 0)
+                age += 1;
+            dPriority += (double)nCredit * age;
+        }
     }
 
     //CAmount fee = 7500;
