@@ -12,6 +12,9 @@ using namespace std;
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 CAmount maxTxFee = DEFAULT_TRANSACTION_MAXFEE;
 
+/** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
+static const int COINBASE_MATURITY = 100;
+
 typedef vector<unsigned char> valtype;
 
 /**
@@ -507,7 +510,7 @@ bool TransactionStore::CreateSendTx(Transaction& tx, int amountVal, int feeVal, 
             //reflecting an assumption the user would accept a bit more delay for
             //a chance at a free transaction.
             //But mempool inputs might still be in the mempool, so their age stays 0
-            //TODO: need depth int age = pcoin.first->GetDepthInMainChain();
+            int age = pcoin.first->GetDepthInMainChain();
             if(age < 0)
             {
                 strFailReason = "Age fail";
