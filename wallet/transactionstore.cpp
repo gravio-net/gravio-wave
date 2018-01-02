@@ -398,10 +398,15 @@ void TransactionStore::AvailableCoins(std::vector<COutput> & vCoins, bool fOnlyC
 
         if(pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
             continue;
+
+        int nDepth = pcoin->GetDepthInMainChain();
+        if (nDepth < 0)
+            continue;
+        //TODO: complete it
     }
 }
 
-void TransactionStore::SelectCoins(const vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, set<pair<const CTransaction*,unsigned int> >& setCoinsRet, CAmount& nValueRet)
+bool TransactionStore::SelectCoins(const vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, set<pair<const CTransaction*,unsigned int> >& setCoinsRet, CAmount& nValueRet)
 {
     vector<COutput> vCoins(vAvailableCoins);
 
