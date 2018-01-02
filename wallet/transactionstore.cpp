@@ -409,7 +409,7 @@ void TransactionStore::AvailableCoins(std::vector<COutput> & vCoins, bool fOnlyC
     }
 }
 
-bool TransactionStore::SelectCoins(const vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, set<pair<const CTransaction*,unsigned int> >& setCoinsRet, CAmount& nValueRet)
+bool TransactionStore::SelectCoins(const vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, set<pair<const Transaction*,unsigned int> >& setCoinsRet, CAmount& nValueRet)
 {
     vector<COutput> vCoins(vAvailableCoins);
 
@@ -493,7 +493,7 @@ bool TransactionStore::CreateSendTx(Transaction& tx, int amountVal, int feeVal, 
         }
         txNew.vout.push_back(txout);
 
-        set<pair<const CTransaction*,unsigned int> > setCoins;
+        set<pair<const Transaction*,unsigned int> > setCoins;
         CAmount nValueIn = 0;
         if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn))
         {
@@ -501,10 +501,10 @@ bool TransactionStore::CreateSendTx(Transaction& tx, int amountVal, int feeVal, 
             return false;
         }
 
-        set<pair<const CTransaction*,unsigned int> >::iterator cit = setCoins.begin();
+        set<pair<const Transaction*,unsigned int> >::iterator cit = setCoins.begin();
         for(; cit != setCoins.end(); cit++)
         {
-            std::pair<const CTransaction*, unsigned int> pcoin = *cit;
+            std::pair<const Transaction*, unsigned int> pcoin = *cit;
             CAmount nCredit = pcoin.first->vout[pcoin.second].nValue;
             //The coin age after the next block (depth+1) is used instead of the current,
             //reflecting an assumption the user would accept a bit more delay for
@@ -514,7 +514,7 @@ bool TransactionStore::CreateSendTx(Transaction& tx, int amountVal, int feeVal, 
             if(age < 0)
             {
                 strFailReason = "Age fail";
-                return false
+                return false;
             }
             if (age != 0)
                 age += 1;

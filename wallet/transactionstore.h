@@ -101,7 +101,7 @@ public:
     std::map<uint256, Transaction> GetTransactions(){ return txlist; }
 
     void AvailableCoins(std::vector<COutput> &, bool);
-    bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<std::pair<const CTransaction*,unsigned int> >& setCoinsRet, CAmount& nValueRet);
+    bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<std::pair<const Transaction*,unsigned int> >& setCoinsRet, CAmount& nValueRet);
     bool CreateSendTx(Transaction& txNew, int amount_val, int fee_val, std::string blob, bool subsract_fee, CryptoAddress &from_address, 
         CryptoAddress &to_address, int& nChangePosInOut, std::string& strFailReason);
 
