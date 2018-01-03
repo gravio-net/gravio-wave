@@ -58,6 +58,7 @@ public:
     uint64_t GetTime() { return time; }
     void SetTime(uint64_t t) { time = t; }
     isminetype IsMine(const CTxOut& txout);
+    bool IsSpent(const uint256& hash, unsigned int n) const;
 
     void SetAddress(std::string addr) { address = addr; }
     bool IsTrusted();

@@ -345,6 +345,26 @@ int Transaction::GetBlocksToMaturity() const
     return max(0, (COINBASE_MATURITY+1) - GetDepthInMainChain());
 }
 
+/**
+ * Outpoint is spent if any non-conflicted transaction
+ * spends it:
+ */
+bool Transaction::IsSpent(const uint256& hash, unsigned int n) const
+{
+    std::map<uint256, Transaction> txlist = GetTransactions();
+    std::map<uint256, Transaction>::iterator it = txlist.begin();
+    for(; it != txlist.end(); it++)
+    {
+        std::vector<CTxIn>::iterator itin = it->second.vin.begin();
+        for(; itin != it->second.vin.end(); itin++)
+        {
+            if(itin->prevout.hash == hash && itin->prevout.n == n)
+                return true;
+        }
+    }
+    return false;
+}
+
 TransactionStore::TransactionStore() : ctx(0), balance(0), blocks_count(0)
 {
 
@@ -405,7 +425,16 @@ void TransactionStore::AvailableCoins(std::vector<COutput> & vCoins, bool fOnlyC
         int nDepth = pcoin->GetDepthInMainChain();
         if (nDepth < 0)
             continue;
-        //TODO: complete it
+        for (unsigned int i = 0; i < pcoin->vout.size(); i++) 
+        {
+            isminetype mine = IsMine(pcoin->vout[i]);
+            if (!(IsSpent(txid, i)) && mine != ISMINE_NO &&
+                pcoin->vout[i].nValue > 0)
+            {
+                vCoins.push_back(COutput(pcoin, i, nDepth, (mine & ISMINE_SPENDABLE) != ISMINE_NO, 
+                    (mine & ISMINE_SPENDABLE) != ISMINE_NO));
+            }
+        }
     }
 }
 
