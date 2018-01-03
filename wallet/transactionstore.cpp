@@ -351,7 +351,7 @@ int Transaction::GetBlocksToMaturity() const
  */
 bool Transaction::IsSpent(const uint256& hash, unsigned int n) const
 {
-    std::map<uint256, Transaction> txlist = GetTransactions();
+    std::map<uint256, Transaction> txlist = store->GetTransactions();
     std::map<uint256, Transaction>::iterator it = txlist.begin();
     for(; it != txlist.end(); it++)
     {
