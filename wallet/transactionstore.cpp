@@ -355,7 +355,7 @@ bool Transaction::IsSpent(const uint256& hash, unsigned int n) const
     std::map<uint256, Transaction>::iterator it = txlist.begin();
     for(; it != txlist.end(); it++)
     {
-        std::vector<CTxIn>::iterator itin = it->second.vin.begin();
+        std::vector<CTxIn>::const_iterator itin = it->second.vin.begin();
         for(; itin != it->second.vin.end(); itin++)
         {
             if(itin->prevout.hash == hash && itin->prevout.n == n)
@@ -427,8 +427,8 @@ void TransactionStore::AvailableCoins(std::vector<COutput> & vCoins, bool fOnlyC
             continue;
         for (unsigned int i = 0; i < pcoin->vout.size(); i++) 
         {
-            isminetype mine = IsMine(pcoin->vout[i]);
-            if (!(IsSpent(txid, i)) && mine != ISMINE_NO &&
+            isminetype mine = pcoin->IsMine(pcoin->vout[i]);
+            if (!(pcoin->IsSpent(txid, i)) && mine != ISMINE_NO &&
                 pcoin->vout[i].nValue > 0)
             {
                 vCoins.push_back(COutput(pcoin, i, nDepth, (mine & ISMINE_SPENDABLE) != ISMINE_NO, 
