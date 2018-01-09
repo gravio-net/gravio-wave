@@ -68,11 +68,15 @@ void Wallet::transactionUpdated(uint256 hash)
     {
         transactions_->updateTransaction(lIterator->second);
     }
+
+    emit balancesChanged();
 }
 
 void Wallet::blockCountUpdated(uint64_t blockCount)
 {
     transactions_->updateBlockCount();
+
+    emit balancesChanged();
 }
 
 QString Wallet::availableBalance()

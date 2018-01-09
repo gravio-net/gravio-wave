@@ -48,6 +48,9 @@ public slots:
     void transactionUpdated(uint256);
     void blockCountUpdated(uint64_t);
 
+signals:
+    void balancesChanged();
+
 private:
     Currency::Type type_;
     CurrencyUnits* units_;

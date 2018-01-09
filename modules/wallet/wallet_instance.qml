@@ -29,6 +29,18 @@ Page
             width: parent.width
 
             //
+            Connections
+            {
+                target: wallet_
+                onBalancesChanged:
+                {
+                    availableBalance.invalidate();
+                    pendingBalance.invalidate();
+                    totalBalance.invalidate();
+                }
+            }
+
+            //
             //
             //
 
@@ -80,6 +92,7 @@ Page
             }
             Label
             {
+                id: availableBalance
                 TextMetrics
                 {
                     id: availableMetrics
@@ -92,6 +105,11 @@ Page
                 verticalAlignment: Label.AlignBottom
                 font.pixelSize: 14
                 text: wallet_ != null ? wallet_.availableBalance() : "?.00000000"
+
+                function invalidate()
+                {
+                    this.text = wallet_ != null ? wallet_.availableBalance() : "?.00000000";
+                }
             }
             //
             // pendingBalance
@@ -107,6 +125,7 @@ Page
             }
             Label
             {
+                id: pendingBalance
                 TextMetrics
                 {
                     id: pendingMetrics
@@ -119,6 +138,11 @@ Page
                 verticalAlignment: Label.AlignBottom
                 font.pixelSize: 14
                 text: wallet_ != null ? wallet_.pendingBalance() : "?.00000000"
+
+                function invalidate()
+                {
+                    this.text = wallet_ != null ? wallet_.pendingBalance() : "?.00000000";
+                }
             }
             //
             // TotalBalance
@@ -134,6 +158,7 @@ Page
             }
             Label
             {
+                id: totalBalance
                 TextMetrics
                 {
                     id: totalMetrics
@@ -146,6 +171,11 @@ Page
                 verticalAlignment: Label.AlignBottom
                 font.pixelSize: 14
                 text: wallet_ != null ? wallet_.totalBalance() : "?.00000000"
+
+                function invalidate()
+                {
+                    this.text = wallet_ != null ? wallet_.totalBalance() : "?.00000000";
+                }
             }
             //
             // "Recent transactions"

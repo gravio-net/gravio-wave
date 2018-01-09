@@ -73,7 +73,8 @@ HEADERS += \
 
 DISTFILES += \
     wallet_ui.qml \
-    wallet_instance.qml
+    wallet_instance.qml \
+    wallet_transactions.qml
 
 contains(ANDROID_TARGET_ARCH,armeabi-v7a) {
     ANDROID_EXTRA_LIBS = \
