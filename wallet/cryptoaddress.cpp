@@ -76,7 +76,7 @@ std::string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend)
             carry /= 58;
         }
 
-        if(carry != 0) return false;
+        if(carry != 0) return std::string("");
         length = i;
         pbegin++;
     }
