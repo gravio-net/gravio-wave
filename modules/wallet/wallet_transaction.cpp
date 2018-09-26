@@ -26,7 +26,6 @@ Transaction::Transaction(Wallet* wallet, QObject *parent) : QObject(parent), wal
 
 Transaction::~Transaction()
 {
-    qDebug() << "Wallet::~Wallet()";
 }
 
 Wallet* Transaction::wallet() { return wallet_; }

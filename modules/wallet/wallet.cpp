@@ -14,7 +14,7 @@ Wallet::Wallet(QObject *parent) : QObject(parent)
     QQmlApplicationEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
 }
 
-Wallet::Wallet(IAccount* account, Currency::Type type, QObject *parent) : QObject(parent), account_(account), type_(type)
+Wallet::Wallet(IAccount* account, Currency::Type type, QObject *parent) : QObject(parent), type_(type), account_(account)
 {
     units_ = 0;
     factory_ = 0;
@@ -25,8 +25,6 @@ Wallet::Wallet(IAccount* account, Currency::Type type, QObject *parent) : QObjec
 
 Wallet::~Wallet()
 {
-    qDebug() << "Wallet::~Wallet()";
-
     backEnd_->StopSync();
 
     delay(1000);
@@ -72,7 +70,7 @@ void Wallet::transactionUpdated(uint256 hash)
     emit balancesChanged();
 }
 
-void Wallet::blockCountUpdated(uint64_t blockCount)
+void Wallet::blockCountUpdated(uint64_t /*blockCount*/)
 {
     transactions_->updateBlockCount();
 

@@ -149,7 +149,7 @@ ApplicationWindow
             Label
             {
                 id: titleLabel
-                text: listView.currentItem ? modulesModel.get(listView.currentIndex).caption : " "
+                text: stackView.depth > 1 && listView.currentItem ? modulesModel.get(listView.currentIndex).caption : " "
                 leftPadding: titleLogo.width + 4.0
                 font.pixelSize: 20
                 elide: Label.ElideRight
@@ -346,6 +346,11 @@ ApplicationWindow
             this.pop();
         }
 
+        function activateCurrentModulePart(source)
+        {
+            activateModule(-1, source.moduleName(), source);
+        }
+
         function activateModule(index, name, source)
         {
             var lModule = null;
@@ -357,9 +362,11 @@ ApplicationWindow
             stackView.currentItem.moduleDeactivate();
 
             // move to the new index
-            listView.currentIndex = index;
+            if (index != -1) listView.currentIndex = index;
+
             // try to load module (if already loaded - checked inside)
             modulesModel.load(name);
+
             // push new module
             lModule = stackView.pushItem(name, source); // push to start *.qml
 
@@ -370,7 +377,7 @@ ApplicationWindow
             drawer.close();
 
             // activate new current module
-            lModule.moduleActivate(modulesModel.get(stackView.getModuleName()));
+            lModule.moduleActivate(modulesModel.get(stackView.getModuleName()) /*module*/, stackView /*host*/);
         }
 
         function deactivateModule()
@@ -381,7 +388,9 @@ ApplicationWindow
                 stackView.currentItem.moduleDeactivate();
 
                 stackView.popItem();
-                listView.currentIndex = modulesModel.findIndex(stackView.getModuleName());
+
+                var lIdx = modulesModel.findIndex(stackView.getModuleName());
+                if (lIdx != -1) listView.currentIndex = lIdx;
             }
 
             footerBar.visible = stackView.depth > 1;
@@ -391,7 +400,7 @@ ApplicationWindow
             console.log("[StackView/popItem]: depth = " + stackView.depth + ", module = " + stackView.currentItem);
 
             // re-activate new current module
-            stackView.currentItem.moduleActivate(modulesModel.get(stackView.getModuleName()));
+            stackView.currentItem.moduleActivate(modulesModel.get(stackView.getModuleName()), stackView);
         }
 
         initialItem: GridLayout
@@ -449,7 +458,7 @@ ApplicationWindow
             {
             }
 
-            function moduleActivate(moduleInfo)
+            function moduleActivate(moduleInfo, host)
             {
             }
 

@@ -6,7 +6,7 @@ CONFIG += plugin c++11
 INCLUDEPATH += ../../ ../../openssl/include
 
 android:  LIBS += -L../gravio-wave/openssl/bin/ -lssl -lcrypto
-else: LIBS += ../openssl/bin/mingw/libcrypto-1_1.a ../openssl/bin/mingw/libssl-1_1.a
+windows: LIBS += ../openssl/bin/mingw/libcrypto-1_1.a ../openssl/bin/mingw/libssl-1_1.a
 
 # Input
 SOURCES += \
@@ -74,7 +74,8 @@ HEADERS += \
 DISTFILES += \
     wallet_ui.qml \
     wallet_instance.qml \
-    wallet_transactions.qml
+    wallet_transactions.qml \
+    wallet_transaction.qml
 
 contains(ANDROID_TARGET_ARCH,armeabi-v7a) {
     ANDROID_EXTRA_LIBS = \

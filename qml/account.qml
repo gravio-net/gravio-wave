@@ -4,7 +4,7 @@ import QtQuick.Controls 2.2
 import QtQuick.Controls.Material 2.1
 import QtQuick.Controls.Universal 2.1
 import QtGraphicalEffects 1.0
-import Qt.labs.folderlistmodel 2.1
+import Qt.labs.folderlistmodel 2.11
 import QtMultimedia 5.8
 
 import net.gravio.wave.helpers 1.0
@@ -530,8 +530,8 @@ Item
 
                                             Component.onCompleted:
                                             {
-                                               currentIndex = -1;
-                                               folder = gravioApp.assetsPath + "/images/avatar";
+                                                currentIndex = -1;
+                                                avatarsListModel.folder = gravioApp.assetsPath + "/images/avatar";
                                             }
 
                                             function getNext()

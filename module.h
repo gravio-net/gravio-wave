@@ -41,7 +41,11 @@ public:
         return QString("file:");
     #endif
 
+    #ifdef Q_OS_LINUX
+        return QString("file:");
+    #else
         return QString("file:///");
+    #endif
     }
     static QString dataDirPath()
     {

@@ -22,8 +22,6 @@ Transactions::Transactions(Wallet *wallet, QObject *parent) : QAbstractListModel
 
 Transactions::~Transactions()
 {
-    qDebug() << "Wallet::~Wallet()";
-
     list_.clear();
     last5list_.clear();
     timeIndex_.clear();

@@ -10,11 +10,14 @@ Page
 
     // wallet instance
     property Wallet wallet_;
+    property variant host_;
 
     // methods
-    function open(wallet)
+    function open(wallet, host)
     {
         wallet_ = wallet;
+        host_ = host;
+        console.log(host_);
     }
 
     Flickable
@@ -43,7 +46,6 @@ Page
             //
             //
             //
-
             Image
             {
                 id: coinAvatarImage
@@ -58,6 +60,50 @@ Page
                 }
 
                 source: (wallet_ != null ? ("../../images/" + wallet_.addressType() + ".png") : "")
+
+                function getHeight()
+                {
+                    return 160;
+                }
+            }
+            MouseArea
+            {
+                anchors.fill: coinAvatarImage
+
+                function goPressed()
+                {
+                    coinAvatarImage.width = 150;
+                    coinAvatarImage.height = 150;
+                }
+
+                function goReleased()
+                {
+                    coinAvatarImage.width = 160;
+                    coinAvatarImage.height = 160;
+                }
+
+                onPressed:
+                {
+                    goPressed();
+                }
+                onExited:
+                {
+                    goReleased();
+                }
+                onReleased:
+                {
+                    goReleased();
+
+                    if (this.containsMouse)
+                    {
+                        console.log("Opening transactions for wallet " + wallet_.addressType());
+                        var lComponent = Qt.createComponent("wallet_transactions.qml");
+                        var lTransactionsInstance = lComponent.createObject(walletInstance);
+
+                        lTransactionsInstance.open(wallet_, host_);
+                        host_.activateCurrentModulePart(lTransactionsInstance);
+                    }
+                }
             }
 
             //
@@ -66,7 +112,7 @@ Page
             Label
             {
                 x: 10
-                y: coinAvatarImage.height + 10
+                y: coinAvatarImage.getHeight() + 10
                 verticalAlignment: Label.AlignBottom
                 font.pixelSize: 16
                 text: "Balances"
@@ -74,7 +120,7 @@ Page
             ToolSeparator
             {
                 x: 5
-                y: coinAvatarImage.height + 20
+                y: coinAvatarImage.getHeight() + 20
                 width: pane.width - 10
                 orientation: Qt.Horizontal
             }
@@ -85,7 +131,7 @@ Page
             {
                 id: availableBalanceLabel
                 x: 10
-                y: coinAvatarImage.height + 35
+                y: coinAvatarImage.getHeight() + 35
                 verticalAlignment: Label.AlignBottom
                 font.pixelSize: 14
                 text: "Available"
@@ -101,7 +147,7 @@ Page
                 }
 
                 x: pane.width - availableMetrics.width - 15
-                y: coinAvatarImage.height + 35
+                y: coinAvatarImage.getHeight() + 35
                 verticalAlignment: Label.AlignBottom
                 font.pixelSize: 14
                 text: wallet_ != null ? wallet_.availableBalance() : "?.00000000"

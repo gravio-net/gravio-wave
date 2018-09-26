@@ -13,6 +13,7 @@ namespace wave {
 class IAddressKey
 {
 public:
+    virtual ~IAddressKey() {}
     virtual backend::Key& key() = 0;
     virtual backend::PubKey& pubKey() = 0;
 };
@@ -20,6 +21,7 @@ public:
 class IAddressKeyFactory
 {
 public:
+    virtual ~IAddressKeyFactory() {}
     virtual QList<IAddressKey*> keys() = 0;
     virtual Currency::Type type() = 0;
     virtual int confirmations() = 0;

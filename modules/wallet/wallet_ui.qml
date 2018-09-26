@@ -29,7 +29,7 @@ Page
 
     function open()
     {
-        if (!initialized)
+        if (!initialized_)
         {
             console.log("Creating UI...");
             for (var lIdx = 0; lIdx < walletsModel.count(); lIdx++)
@@ -40,11 +40,11 @@ Page
                 var lComponent = Qt.createComponent("wallet_instance.qml");
                 var lWalletInstance = lComponent.createObject(page);
 
-                lWalletInstance.open(lWallet);
+                lWalletInstance.open(lWallet, host_);
                 walletsSwipeView.addItem(lWalletInstance);
             }
 
-            initialized = true;
+            initialized_ = true;
         }
     }
 
@@ -56,11 +56,12 @@ Page
         console.log("[Wallet/moduleDeactivate]: fired");
     }
 
-    function moduleActivate(moduleInfo)
+    function moduleActivate(moduleInfo, host)
     {
         console.log("[Wallet/moduleActivate]: fired");
 
-        moduleName = moduleInfo.name;
+        moduleName_ = moduleInfo.name;
+        host_ = host;
 
         open();
     }
@@ -68,6 +69,7 @@ Page
     //
     // common module properties
     //
-    property string moduleName;
-    property bool initialized;
+    property string moduleName_;
+    property bool initialized_;
+    property variant host_;
 }

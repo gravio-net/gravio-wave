@@ -14,6 +14,8 @@
 #include <windows.h> // for Windows API
 #include <wincrypt.h>
 #include <sys/time.h>
+#else
+#include <sys/time.h>
 #endif
 
 using namespace gravio::wave::backend;

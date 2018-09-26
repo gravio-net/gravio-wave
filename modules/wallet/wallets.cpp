@@ -17,7 +17,6 @@ Wallets::Wallets(IAccount* account, QObject *parent): QAbstractListModel(parent)
 
 Wallets::~Wallets()
 {
-    qDebug() << "Wallets::~Wallets()";
 }
 
 int Wallets::rowCount(const QModelIndex &parent) const
